@@ -1,6 +1,6 @@
 # Gesture Control Guide
 
-Shukr is designed to be fully navigable without touching the screen. We use **MediaPipe** to detect face and hand gestures and map them to application actions.
+Lisan is designed to be fully navigable without touching the screen. We use **MediaPipe** to detect face and hand gestures and map them to application actions.
 
 ---
 
@@ -28,7 +28,7 @@ Face gestures are used for selection and triggering specific actions.
 
 ## 🛠️ Calibration & Settings
 
-Since every user has different mobility and lighting conditions, Shukr allows for gesture calibration.
+Since every user has different mobility and lighting conditions, Lisan allows for gesture calibration.
 
 ### Threshold Adjustment
 In the **Settings Panel**, you can adjust the sensitivity (threshold) for each gesture:

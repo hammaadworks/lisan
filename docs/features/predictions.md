@@ -1,6 +1,6 @@
 # Adaptive Prediction Guide
 
-Shukr features an **Adaptive Prediction Engine** that learns from a user's habits and environmental factors to suggest the most likely next word. This reduces the number of gestures or clicks needed to communicate.
+Lisan features an **Adaptive Prediction Engine** that learns from a user's habits and environmental factors to suggest the most likely next word. This reduces the number of gestures or clicks needed to communicate.
 
 ---
 

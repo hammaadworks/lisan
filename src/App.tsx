@@ -3,13 +3,13 @@ import './styles/app.css';
 import { LanguageProvider, useLanguage } from './hooks/useLanguage';
 import { useAudio } from './hooks/useAudio';
 import { ConfigProvider, useAppConfig } from './hooks/useAppConfig';
-import { useCameraGestures } from './hooks/useCameraGestures';
 import { GestureEditModal } from './components/modals/GestureEditModal';
 import { type GestureDefinition } from './recognition/gestures/types';
 import { useFuzzySearch } from './hooks/useFuzzySearch';
 import { predictionsEngine } from './lib/predictionsEngine';
 import { translator } from './lib/translator';
 import { universeDb } from './lib/universeDb';
+import { vocabularyStore } from './lib/vocabularyStore';
 
 // Extracted Components
 import { SplashScreen } from './components/SplashScreen';
@@ -22,16 +22,15 @@ import { SOSModal } from './components/SOSModal';
 import { SettingsPanel } from './components/SettingsPanel';
 import { VoiceStudio } from './components/VoiceStudio/VoiceStudio';
 import { DoodlePad } from './components/Doodle/DoodlePad';
-import { CameraPreview } from './components/CameraPreview';
+import { GestureService } from './components/GestureService';
+import { LandingPage } from './components/LandingPage';
+import { WordManager } from './components/WordManager';
 import { ScreenFlashes } from './components/ScreenFlashes';
 import { WordAddModal } from './components/WordAddModal';
 import { WordEditor } from './components/WordEditor';
-import { WordManager } from './components/WordManager';
-import { LandingPage } from './components/LandingPage';
-import { PermissionDialog } from './components/modals/Dialogs';
 
 const AppContent = () => {
-  const { language, setLanguage, primaryLanguage, secondaryLanguage, isPrimary } = useLanguage();
+  const { language, setLanguage, primaryLanguage, secondaryLanguage, isPrimary, t } = useLanguage();
   const { speak, speakSequence, playClick, currentlyPlayingId } = useAudio();
   const { config, updateConfig, isLoading: isConfigLoading } = useAppConfig();
 
@@ -64,7 +63,6 @@ const AppContent = () => {
   const [randomQuote, setRandomQuote] = useState<any>(null);
   const [isDraggingPreview, setIsDraggingPreview] = useState(false);
   const [editingGesture, setEditingGesture] = useState<GestureDefinition | null>(null);
-  const [showPermissionExplanation, setShowPermissionExplanation] = useState(false);
 
   const actionHandlerRef = useRef<(gestureKey: string) => void>(() => {});
   const builderScrollRef = useRef<HTMLDivElement>(null);
@@ -75,25 +73,11 @@ const AppContent = () => {
     (window as any)._showSOS = () => setShowSOS(true);
   }, []);
 
-  const { effectiveEnabled, isRecognitionActive, toggleTracking, permissionStatus, requestPermission, videoRef, isModelLoaded, gestureHits } =
-    useCameraGestures((action) => {
-      actionHandlerRef.current(action);
-    }, route === '#voices' || showSplash || !isAppStarted || isConfigLoading);
-
   const handleCameraToggle = useCallback(async () => {
-    if (permissionStatus !== 'granted') {
-      setShowPermissionExplanation(true);
-    } else {
-      toggleTracking();
+    if (typeof (window as any)._toggleGestureService === 'function') {
+      (window as any)._toggleGestureService();
     }
-  }, [permissionStatus, toggleTracking]);
-
-  const handleConfirmPermission = useCallback(async () => {
-    const success = await requestPermission();
-    if (success) {
-      setShowPermissionExplanation(false);
-    }
-  }, [requestPermission]);
+  }, []);
 
   const handleSaveGesture = useCallback(async (updated: GestureDefinition, blob?: Blob | null) => {
     if (!config) return;
@@ -111,8 +95,6 @@ const AppContent = () => {
     }
     setEditingGesture(null);
   }, [config, updateConfig]);
-
-  const handlePreviewDragMove = useCallback((_pos: { x: number; y: number }) => {}, []);
 
   const handlePreviewDrop = useCallback((rect: DOMRect) => {
     if (!cameraButtonRef.current) return;
@@ -139,9 +121,9 @@ const AppContent = () => {
 
     if (isOverlapping) {
       if (navigator.vibrate) navigator.vibrate([40, 30]); // Haptic feedback
-      toggleTracking();
+      handleCameraToggle();
     }
-  }, [toggleTracking]);
+  }, [handleCameraToggle]);
 
   const refreshWords = useCallback(async () => {
     const words = await universeDb.words.toArray();
@@ -228,47 +210,16 @@ const AppContent = () => {
 
   const handleDeleteWord = useCallback(async (id: string) => {
     if (!config) return;
-    const newConfig: any = {
-      ...config,
-      categories: (config.categories || []).map((cat: any) => ({
-        ...cat,
-        items: (cat.items || []).filter((i: any) => i.id !== id),
-      }))
-    };
-    if (newConfig.favorites) {
-      newConfig.favorites = newConfig.favorites.filter((fid: string) => fid !== id);
-    }
-    if (newConfig.family) {
-      newConfig.family = newConfig.family.filter((fid: string) => fid !== id);
-    }
-    updateConfig(newConfig);
-    await universeDb.words.delete(id);
-    await universeDb.audio.where({ wordId: id }).delete();
-    await universeDb.doodles.where('wordId').equals(id).delete();
+    const updatedConfig = await vocabularyStore.deleteConcept(id, config);
+    updateConfig(updatedConfig);
     refreshWords();
     setEditingWord(null);
   }, [config, updateConfig, refreshWords]);
 
   const handleSaveEdit = useCallback(async (item: any, blob?: Blob | null) => {
     if (!config) return;
-    const newConfig: any = { ...config };
+    const updatedConfig = await vocabularyStore.saveConcept(item, config);
     
-    // Handle isFamily toggle during edit
-    const isActuallyInFamily = (newConfig.family || []).includes(item.id);
-    
-    if (item.isFamily && !isActuallyInFamily) {
-        newConfig.family = [...(newConfig.family || []), item.id];
-    } else if (!item.isFamily && isActuallyInFamily) {
-        newConfig.family = (newConfig.family || []).filter((id: string) => id !== item.id);
-    }
-
-    newConfig.categories = newConfig.categories.map((cat: any) => ({
-      ...cat,
-      items: (cat.items || []).map((i: any) => i.id === item.id ? item : i)
-    }));
-
-    updateConfig(newConfig);
-    await universeDb.words.put(item);
     if (blob) {
       const voiceSlug = config.active_voice || 'en_voice_hammaad';
       const voiceRecord = await universeDb.voices.where({ id: voiceSlug }).first();
@@ -280,6 +231,8 @@ const AppContent = () => {
           });
       }
     }
+    
+    updateConfig(updatedConfig);
     refreshWords();
     setEditingWord(null);
   }, [config, updateConfig, refreshWords]);
@@ -302,33 +255,24 @@ const AppContent = () => {
 
   const handleAddCustomWord = async (item: any, blob?: Blob | null) => {
     if (!config) return;
-    const newConfig: any = { ...config, categories: [...(config.categories || [])] };
     
-    if (item.isFamily) {
-        newConfig.family = [...(newConfig.family || []), item.id];
-    } 
-
-    newConfig.categories = newConfig.categories.map((cat: any) => {
-      if (cat.id === 'general') {
-        return { ...cat, items: [...(cat.items || []), item] };
-      }
-      return cat;
-    });
-
-    updateConfig(newConfig);
+    // Ensure it goes to general category if not specified
+    const updatedItem = { ...item, categoryId: item.categoryId || 'general' };
+    const updatedConfig = await vocabularyStore.saveConcept(updatedItem, config);
     
-    await universeDb.words.put(item);
     if (blob) {
       const voiceSlug = config.active_voice || 'en_voice_hammaad';
       const voiceRecord = await universeDb.voices.where({ id: voiceSlug }).first();
       if (voiceRecord?.numericId !== undefined) {
           await universeDb.audio.put({
             voiceNumericId: voiceRecord.numericId,
-            wordId: item.id,
+            wordId: updatedItem.id,
             blob
           });
       }
     }
+
+    updateConfig(updatedConfig);
     refreshWords();
     setAddingWord(null);
   };
@@ -354,7 +298,7 @@ const AppContent = () => {
       (r.text_secondary || r.en || '').toLowerCase() === searchQuery.toLowerCase()
     );
     if (!exactMatch && searchQuery.length > 1) {
-      const addLabel = language === 'ur' ? 'نیا لفظ؟' : 'Add Word?';
+      const addLabel = t('doodle.addNew');
       results.push({ id: 'add_new_prompt', ur: addLabel, en: 'Add Word?', icon: 'list-plus', isPrompt: true, onClick: createSearchPrompt });
     }
     return results;
@@ -381,7 +325,7 @@ const AppContent = () => {
     const favs = config?.favorites || [];
     const items = (dbWords.length > 0 ? dbWords : allItems).filter((i: any) => favs.includes(i.id));
     
-    const addLabel = language === 'ur' ? 'نیا لفظ؟' : 'Add Word?';
+    const addLabel = t('doodle.addNew');
     return [
       { id: 'add_fav_prompt', ur: addLabel, en: 'Add Word?', icon: 'list-plus', isPrompt: true, onClick: () => handleOpenAddWord('favorite') },
       ...items
@@ -391,7 +335,7 @@ const AppContent = () => {
   const getFamilyItems = useCallback(() => {
     const fams = config?.family || [];
     const items = (dbWords.length > 0 ? dbWords : allItems).filter((i: any) => fams.includes(i.id));
-    const addLabel = language === 'ur' ? 'نیا لفظ؟' : 'Add Word?';
+    const addLabel = t('doodle.addNew');
     return [
       { id: 'add_family_prompt', ur: addLabel, en: 'Add Word?', icon: 'list-plus', isPrompt: true, onClick: () => handleOpenAddWord('family') },
       ...items
@@ -405,7 +349,7 @@ const AppContent = () => {
     
     const items = getHomeItems();
     if (currentCategory === 'general') {
-        const addLabel = language === 'ur' ? 'نیا لفظ؟' : 'Add Word?';
+        const addLabel = t('doodle.addNew');
         return [
           { id: 'add_general_prompt', ur: addLabel, en: 'Add Word?', icon: 'list-plus', isPrompt: true, onClick: () => handleOpenAddWord('general') },
           ...items
@@ -461,7 +405,7 @@ const AppContent = () => {
     const actions: (() => void)[] = [];
     
     // 1. Header (0-4)
-    actions.push(toggleTracking); // Camera
+    actions.push(handleCameraToggle); // Camera
     actions.push(toggleSentenceBuilder); // Builder
     actions.push(() => { playClick(); navigate('#'); }); // Shukr/Home
     actions.push(() => { playClick(); setLanguage(language === primaryLanguage ? secondaryLanguage : primaryLanguage); }); // Lang
@@ -489,19 +433,19 @@ const AppContent = () => {
 
     // 6. Footer Actions (Yes, No, Doodle)
     actions.push(() => { 
-      speak(isPrimary ? 'ہاں' : 'Yes', 'sys_yes'); 
+      speak(t('app.yes'), 'sys_yes'); 
       setShowYesFlash(true);
       setTimeout(() => setShowYesFlash(false), 1000);
     });
     actions.push(() => { 
-      speak(isPrimary ? 'نہیں' : 'No', 'sys_no'); 
+      speak(t('app.no'), 'sys_no'); 
       setShowNoFlash(true);
       setTimeout(() => setShowNoFlash(false), 1000);
     });
     actions.push(() => { playClick(); navigate('#doodle'); });
 
     return actions;
-  }, [toggleTracking, toggleSentenceBuilder, playClick, navigate, setLanguage, language, primaryLanguage, secondaryLanguage, displayCategories, currentCategory, predictions, gridItems, isSentenceBuilderActive, playSentence, handleWordItemClick, isPrimary, speak]);
+  }, [handleCameraToggle, toggleSentenceBuilder, playClick, navigate, setLanguage, language, primaryLanguage, secondaryLanguage, displayCategories, currentCategory, predictions, gridItems, isSentenceBuilderActive, playSentence, handleWordItemClick, isPrimary, speak]);
 
   const handleGestureAction = useCallback(async (gestureKey: string) => {
     const mapping = config?.gesture_mappings?.[gestureKey];
@@ -536,7 +480,7 @@ const AppContent = () => {
       const action = mapping.value as string;
       switch (action) {
         case 'YES':
-          speak(isPrimary ? 'ہاں' : 'Yes', 'sys_yes');
+          speak(t('app.yes'), 'sys_yes');
           setShowYesFlash(true);
           setTimeout(() => setShowYesFlash(false), 1000);
           break;
@@ -592,11 +536,8 @@ const AppContent = () => {
       {route !== '#voices' && (
         <Header
           onOpenSettings={(tab) => navigate('#settings', tab)}
-          isTrackingEnabled={effectiveEnabled}
-          isRecognitionActive={isRecognitionActive}
           toggleTracking={handleCameraToggle}
           hasUnsyncedChanges={false}
-          isModelLoaded={isModelLoaded}
           onSOS={() => setShowSOS(true)}
           onHome={() => { setSentence([]); setCurrentCategory(null); navigate('#'); }}
           isSentenceBuilderActive={isSentenceBuilderActive}
@@ -608,12 +549,11 @@ const AppContent = () => {
           cameraButtonRef={cameraButtonRef}
           gestureMappings={config?.gesture_mappings}
           onLongPressGesture={setEditingGesture}
-          onTriggerGesture={handleGestureAction}
-          gestureHits={gestureHits}
+          showLanguageToggle={route === '#' || route === '#doodle'}
         />
       )}
 
-      <div className="main-content-wrapper" style={{ flex: 1, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div className="main-content-wrapper" style={{ flex: 1, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         {route === '#voices' ? (
           <VoiceStudio
             config={config}
@@ -640,7 +580,6 @@ const AppContent = () => {
           />
         ) : route === '#doodle' ? (
           <>
-            <CameraPreview isEnabled={effectiveEnabled} videoRef={videoRef} onDragChange={setIsDraggingPreview} onDragMove={handlePreviewDragMove} onDrop={handlePreviewDrop} />
             <DoodlePad
               config={config} focusedIndex={focusedIndex}
               onOpenAddWord={(initial) => handleOpenAddWord('cat_custom', initial)}
@@ -663,8 +602,6 @@ const AppContent = () => {
           </>
         ) : (
           <>
-            <CameraPreview isEnabled={effectiveEnabled} videoRef={videoRef} onDragChange={setIsDraggingPreview} onDragMove={handlePreviewDragMove} onDrop={handlePreviewDrop} />
-            
             <div className="top-system-area">
               <WordPredictions 
                 predictions={predictions} 
@@ -727,14 +664,14 @@ const AppContent = () => {
             }
           }}
           onYesClick={() => {
-            const yesText = language === 'ur' ? 'ہاں' : 'Yes';
+            const yesText = t('app.yes');
             speak(yesText, 'sys_yes');
             setShowYesFlash(true);
             setTimeout(() => setShowYesFlash(false), 1000);
             if (route === '#doodle') navigate('#');
           }}
           onNoClick={() => {
-            const noText = language === 'ur' ? 'نہیں' : 'No';
+            const noText = t('app.no');
             speak(noText, 'sys_no');
             setShowNoFlash(true);
             setTimeout(() => setShowNoFlash(false), 1000);
@@ -744,6 +681,16 @@ const AppContent = () => {
           offset={5 + displayCategories.length + predictions.length + gridItems.length + (isSentenceBuilderActive ? 3 : 0)}
         />
       )}
+
+      <GestureService 
+         onAction={handleGestureAction}
+         forceDisabled={route === '#voices' || showSplash || !isAppStarted || isConfigLoading}
+         onDragChange={setIsDraggingPreview}
+         onDrop={handlePreviewDrop}
+         cameraButtonRef={cameraButtonRef}
+         onLongPressGesture={setEditingGesture}
+         lastGesture={lastGesture}
+      />
 
       <ScreenFlashes showYes={showYesFlash} showNo={showNoFlash} />
       {showSOS && <SOSModal onClose={() => setShowSOS(false)} emergencyContacts={config?.emergency_contacts || []} />}
@@ -766,14 +713,6 @@ const AppContent = () => {
           config={config}
           onClose={() => setEditingGesture(null)}
           onSave={handleSaveGesture}
-        />
-      )}
-      {showPermissionExplanation && (
-        <PermissionDialog 
-          type="camera"
-          status={permissionStatus === 'granted' ? 'prompt' : (permissionStatus as any)} 
-          onConfirm={handleConfirmPermission} 
-          onCancel={() => setShowPermissionExplanation(false)} 
         />
       )}
     </div>

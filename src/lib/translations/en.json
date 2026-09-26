@@ -1,0 +1,134 @@
+{
+  "settings": {
+    "title": "Settings",
+    "edit": "Edit",
+    "addNew": "Add New",
+    "tabs": {
+      "contact": "Call",
+      "voice": "Voice",
+      "data": "Data",
+      "general": "Language"
+    },
+    "sos": {
+      "template": "SOS Template",
+      "countdown": "Countdown (Seconds)",
+      "contacts": "Emergency Contacts",
+      "namePlaceholder": "Name",
+      "phonePlaceholder": "Phone"
+    },
+    "voice": {
+      "selectVoice": "Select Voice",
+      "openStudio": "Open Voice Studio",
+      "systemVoice": "System Voice",
+      "renameVoice": "Rename Voice",
+      "deleteVoice": "Delete Voice?",
+      "deleteConfirm": "Are you sure you want to delete this voice and all its recordings?",
+      "duplicateName": "Duplicate Name",
+      "invalidName": "Invalid Name"
+    },
+    "data": {
+      "intro": "App Introduction",
+      "introDesc": "View the app's features and overview on the landing page.",
+      "viewLanding": "View Landing Page",
+      "backup": "Cloud Backup",
+      "backupDesc": "Download your entire universe (words, voices, sketches) as a single portable file.",
+      "backupBtn": "Backup Universe",
+      "restore": "Restore Data",
+      "restoreDesc": "Restore your universe from a previously saved backup file.",
+      "restoreBtn": "Restore from File",
+      "hardReset": "Hard Reset",
+      "hardResetDesc": "Clear all local data and reset the version back to 1.",
+      "hardResetBtn": "Hard Reset App",
+      "hardResetConfirm": "This will DELETE all your custom words, voices, and reset the app. Are you absolutely sure?"
+    },
+    "general": {
+      "nickname": "User Nickname",
+      "langPair": "Language Pair",
+      "primary": "Primary (User)",
+      "secondary": "Secondary (Helper)",
+      "dualMode": "Dual Language",
+      "speechRate": "Speech Rate",
+      "buttonSound": "Button Sound"
+    }
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "back": "Back",
+    "next": "Next",
+    "on": "ON",
+    "off": "OFF",
+    "success": "Success",
+    "error": "Error",
+    "quote": "Quote",
+    "nextQuote": "Next Quote"
+  },
+  "sos": {
+    "title": "Emergency Help",
+    "active": "SOS ACTIVE",
+    "sending": "ALERT SENDING",
+    "cancelHint": "Press STOP to cancel",
+    "alerted": "Family has been alerted.",
+    "quickCall": "Quick Call",
+    "stopAlert": "Stop Alert",
+    "restart": "Restart"
+  },
+  "doodle": {
+    "clear": "Clear",
+    "train": "Train",
+    "suggestions": "Suggestions",
+    "searching": "Searching",
+    "drawing": "Drawing",
+    "popular": "Popular",
+    "searchPlaceholder": "Search for a word...",
+    "addNew": "Add New Word",
+    "drawFirst": "Draw something first!",
+    "trainModal": {
+      "title": "Train Doodle",
+      "hint": "Search for the word this doodle represents, or add a new one:",
+      "searchPlaceholder": "Search word...",
+      "addNewWord": "Add a new word",
+      "addNewWordQuery": "Add new word: {query}"
+    }
+  },
+  "dialogs": {
+    "cameraDenied": "Camera Access Denied",
+    "micDenied": "Microphone Access Denied",
+    "enableCamera": "Enable Hands-Free?",
+    "enableMic": "Enable Microphone?",
+    "cameraDeniedDesc": "Camera access is blocked. To use gestures, please enable it in your browser settings.",
+    "micDeniedDesc": "Microphone access is blocked. To record audio, please enable it in your browser settings.",
+    "enableCameraDesc": "Shukr uses the camera to recognize your hand gestures. Your video is processed locally and never leaves your device.",
+    "enableMicDesc": "Shukr uses the microphone to record your voice. Your recordings are processed locally and never leave your device.",
+    "close": "Close",
+    "allow": "Allow Access"
+  },
+  "sentence": {
+    "placeholder": "Build a sentence...",
+    "speak": "SPEAK"
+  },
+  "gesture": {
+    "edit": "Edit Gesture",
+    "selectWords": "Select words to speak",
+    "searchPlaceholder": "Search words...",
+    "recording": "Recording...",
+    "recordAudio": "Record Audio",
+    "existingFound": "Existing recording found",
+    "tabs": {
+      "action": "Action",
+      "words": "Words",
+      "audio": "Audio"
+    },
+    "labels": {
+      "ur": "Urdu Label",
+      "en": "English Label"
+    }
+  },
+  "app": {
+    "yes": "Yes",
+    "no": "No",
+    "favorite": "Favorite",
+    "family": "Family"
+  }
+}

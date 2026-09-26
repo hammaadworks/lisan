@@ -20,7 +20,7 @@ export const QuoteCard: React.FC<QuoteCardProps> = ({
   config,
   isFocused 
 }) => {
-  const { isPrimary, language, primaryLanguage, secondaryLanguage } = useLanguage();
+  const { isPrimary, primaryLanguage, secondaryLanguage, t } = useLanguage();
   const [showManager, setShowManager] = useState(false);
   const [newPrimary, setNewPrimary] = useState('');
   const [newSecondary, setNewSecondary] = useState('');
@@ -69,7 +69,7 @@ export const QuoteCard: React.FC<QuoteCardProps> = ({
         <div className="quote-header">
           <div className="quote-tag">
             <Sparkles size={16} />
-            <span>{isPrimary ? (language === 'ur' ? 'اچھی بات' : 'Quote') : 'Quote'}</span>
+            <span>{t('common.quote')}</span>
           </div>
           <button className="manage-btn" onClick={() => setShowManager(!showManager)}>
             <Settings size={18} />
@@ -83,7 +83,7 @@ export const QuoteCard: React.FC<QuoteCardProps> = ({
         </div>
 
         <button className="next-quote-hint" onClick={onNext}>
-           {isPrimary ? (language === 'ur' ? 'اگلی بات' : 'Next Quote') : 'Next Quote'}
+           {t('common.nextQuote')}
         </button>
       </div>
 
@@ -95,7 +95,7 @@ export const QuoteCard: React.FC<QuoteCardProps> = ({
             background: 'white', padding: 24, borderRadius: 24, width: '90%', maxWidth: 450, maxHeight: '80vh', overflowY: 'auto'
           }}>
             <div className="manage-header">
-              <h3>Manage Quotes</h3>
+              <h3>{t('settings.tabs.general')} - {t('common.quote')}</h3>
               <button className="close-btn" onClick={() => setShowManager(false)}><X size={24} /></button>
             </div>
 
@@ -103,19 +103,19 @@ export const QuoteCard: React.FC<QuoteCardProps> = ({
               <input 
                 className="massive-input"
                 style={{ height: 50, fontSize: '1rem' }}
-                placeholder="Primary Language Text..." 
+                placeholder={t('settings.general.primary') + "..."} 
                 value={newPrimary} 
                 onChange={e => setNewPrimary(e.target.value)} 
               />
               <input 
                 className="massive-input"
                 style={{ height: 50, fontSize: '1rem' }}
-                placeholder="Secondary Language Text..." 
+                placeholder={t('settings.general.secondary') + "..."} 
                 value={newSecondary} 
                 onChange={e => setNewSecondary(e.target.value)} 
               />
               <button className="btn-save-sm" onClick={handleAddQuote} style={{ height: 50, justifyContent: 'center' }}>
-                <Check size={20} /> Add Quote
+                <Check size={20} /> {t('common.save')}
               </button>
             </div>
 

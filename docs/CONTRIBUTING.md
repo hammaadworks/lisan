@@ -1,6 +1,6 @@
-# Contributing to Shukr
+# Contributing to Lisan
 
-First off, thank you for considering contributing to Shukr! It's people like you that make Shukr such a great tool for the community. This guide will help you get started with the contribution process.
+First off, thank you for considering contributing to Lisan! It's people like you that make Lisan such a great tool for the community. This guide will help you get started with the contribution process.
 
 ---
 
@@ -12,7 +12,7 @@ First off, thank you for considering contributing to Shukr! It's people like you
 
 ### Setup
 1.  **Fork the Repo:** Create your own copy of the repository.
-2.  **Clone Locally:** `git clone https://github.com/YOUR_USERNAME/shukr.git`
+2.  **Clone Locally:** `git clone https://github.com/YOUR_USERNAME/lisan.git`
 3.  **Install Dependencies:** `pnpm install`
 4.  **Start Dev Server:** `pnpm dev`
 
@@ -38,7 +38,7 @@ To maintain a high level of code quality, we follow these guidelines:
 - Write meaningful comments for complex logic.
 
 ### 4. Accessibility (a11y)
-- Shukr is for people with mobility and speech challenges. Ensure all new features are accessible via keyboard and screen readers.
+- Lisan is for people with mobility and speech challenges. Ensure all new features are accessible via keyboard and screen readers.
 - Provide proper `aria-label` attributes for buttons and interactive elements.
 
 ---
@@ -56,7 +56,7 @@ To maintain a high level of code quality, we follow these guidelines:
 ## 🐛 Bug Reports & Feature Requests
 
 ### Reporting a Bug
-Before reporting a bug, check the [existing issues](https://github.com/hammaadworks/shukr/issues) to see if it has already been reported. When opening an issue, please include:
+Before reporting a bug, check the [existing issues](https://github.com/hammaadworks/lisan/issues) to see if it has already been reported. When opening an issue, please include:
 - A clear, descriptive title.
 - Steps to reproduce the issue.
 - Expected vs. actual behavior.
@@ -71,7 +71,7 @@ We love new ideas! When suggesting a feature, please explain:
 ---
 
 ## 📄 License
-By contributing to Shukr, you agree that your contributions will be licensed under the [MIT License](../LICENSE).
+By contributing to Lisan, you agree that your contributions will be licensed under the [MIT License](../LICENSE).
 
 ---
 

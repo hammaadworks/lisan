@@ -1,12 +1,12 @@
 # Data Universe Architecture
 
-The **Data Universe** is the core foundational architecture of Shukr. It manages all persistent storage, cross-device synchronization, and multilingual mapping through a unified source of truth.
+The **Data Universe** is the core foundational architecture of Lisan. It manages all persistent storage, cross-device synchronization, and multilingual mapping through a unified source of truth.
 
 ---
 
 ## 1. Unified Storage Philosophy
 
-Shukr operates as a strictly **offline-first and local-only** Progressive Web App. 
+Lisan operates as a strictly **offline-first and local-only** Progressive Web App. 
 
 All user data is stored entirely on the local device using **IndexedDB** (via `Dexie.js`). This ensures:
 1.  **Instant Availability:** Zero latency even in areas with poor connectivity.
@@ -14,7 +14,7 @@ All user data is stored entirely on the local device using **IndexedDB** (via `D
 
 ---
 
-## 2. Schema Definition (`shukr_universe_db`)
+## 2. Schema Definition (`lisan_universe_db`)
 
 The database utilizes a single linear schema (Version 1) to eliminate redundant storage logic.
 

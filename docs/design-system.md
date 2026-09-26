@@ -1,7 +1,7 @@
-# Shukr Unified Design System (MASTER)
+# Lisan Unified Design System (MASTER)
 
 ## 1. Project Context
-**Project:** Shukr (Adaptive AAC)
+**Project:** Lisan (Adaptive AAC)
 **User Persona:** Pious Muslim Indian lady (Naani) with speech loss and shingles.
 **Target Device:** Samsung / Android Mobile (High Aspect Ratio).
 **Mood:** Empathetic, Spiritual, Warm, Premium, Accessible.

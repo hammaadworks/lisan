@@ -44,10 +44,6 @@ class Translator {
     const dynamic = this.dynamicWords[id];
     if (dynamic) {
       if (dynamic.translations && dynamic.translations[targetLang]) return dynamic.translations[targetLang];
-      // Legacy support
-      if (dynamic[targetLang]) return dynamic[targetLang];
-      if (dynamic.text_primary && targetLang === 'ur') return dynamic.text_primary;
-      if (dynamic.text_secondary && targetLang === 'en') return dynamic.text_secondary;
     }
 
     // 2. Check static vocab
@@ -70,9 +66,6 @@ class Translator {
   }
 
   getTransliteration(id: string, sourceLang: string, readerLang: string): string {
-    // Transliteration is only meaningful across different scripts. 
-    // If both are latin, we usually don't need it, but the spec wants it.
-    
     // 1. Check dynamic words first
     const dynamic = this.dynamicWords[id];
     if (dynamic) {

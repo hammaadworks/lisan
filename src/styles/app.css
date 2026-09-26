@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* --- Shukr Modular CSS --- */
 
 @import './modules/tokens.css';

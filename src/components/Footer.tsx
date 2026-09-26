@@ -1,6 +1,7 @@
 import React from 'react';
 import {WordCard} from './WordCard';
 import {Heart, PenTool, Users} from 'lucide-react';
+import { useLanguage } from '../hooks/useLanguage';
 
 interface FooterProps {
     currentCategory: string | null;
@@ -26,13 +27,14 @@ export const Footer: React.FC<FooterProps> = React.memo(({
     offset,
     currentCategory,
 }) => {
+    const { t } = useLanguage();
     return (
         <div className="bottom-system-area" dir="ltr">
             <div className="integrated-smart-bar central-dock brand-dock-style">
                 {/* 1: Yes */}
                 <WordCard
                     variant={4}
-                    item={{ id: 'sys_yes', ur: 'ہاں', en: 'Yes' }}
+                    item={{ id: 'sys_yes', text_primary: 'ہاں', text_secondary: 'Yes' }}
                     isFocused={focusedIndex === offset}
                     onClick={onYesClick}
                     className="yes-btn footer-mini-card"
@@ -41,7 +43,7 @@ export const Footer: React.FC<FooterProps> = React.memo(({
                 {/* 2: No */}
                 <WordCard
                     variant={4}
-                    item={{ id: 'sys_no', ur: 'نہیں', en: 'No' }}
+                    item={{ id: 'sys_no', text_primary: 'نہیں', text_secondary: 'No' }}
                     isFocused={focusedIndex === offset + 1}
                     onClick={onNoClick}
                     className="no-btn footer-mini-card"
@@ -64,7 +66,7 @@ export const Footer: React.FC<FooterProps> = React.memo(({
                     onClick={() => onCategoryClick('favorite')}
                 >
                     <Heart size={24} fill="currentColor"/>
-                    <span className="dock-label">پسندیدہ</span>
+                    <span className="dock-label">{t('app.favorite')}</span>
                 </button>
 
                 {/* 5: Family */}
@@ -73,7 +75,7 @@ export const Footer: React.FC<FooterProps> = React.memo(({
                     onClick={() => onCategoryClick('family')}
                 >
                     <Users size={24} fill="currentColor"/>
-                    <span className="dock-label">خاندان</span>
+                    <span className="dock-label">{t('app.family')}</span>
                 </button>
             </div>
         </div>

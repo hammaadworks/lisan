@@ -162,8 +162,11 @@ export const WordEditor: React.FC<WordEditorProps> = ({ item: initialItem, onClo
                   if (targetLang === 'ur') updated.text_primary = res.translation;
                   if (targetLang === 'en') updated.text_secondary = res.translation;
               }
-              if (res.transliteration) {
-                  updated.transliterations[targetLang]['en'] = res.transliteration;
+              if (res.transliterations) {
+                  Object.keys(res.transliterations).forEach(srcLang => {
+                      if (!updated.transliterations[targetLang]) updated.transliterations[targetLang] = {};
+                      updated.transliterations[targetLang][srcLang] = res.transliterations[srcLang];
+                  });
               }
               
               setItem(updated);
@@ -280,7 +283,6 @@ export const WordEditor: React.FC<WordEditorProps> = ({ item: initialItem, onClo
                 variant={1} 
                 languageOverride={activeTab}
                 helperLanguageOverride={helperLanguage}
-                forceDualMode={true}
              />
           </div>
         </div>

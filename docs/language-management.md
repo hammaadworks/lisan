@@ -1,11 +1,11 @@
 # Language Management & Localization
 
-Shukr is a global platform supporting a wide range of languages, scripts, and cultural contexts. This guide explains how to manage existing languages and add new ones to the "Universe."
+Lisan is a global platform supporting a wide range of languages, scripts, and cultural contexts. This guide explains how to manage existing languages and add new ones to the "Universe."
 
 ---
 
 ## 🌍 Supported Languages
-Shukr currently supports the following locales out-of-the-box:
+Lisan currently supports the following locales out-of-the-box:
 *   **Urdu (ur)** - Native RTL support with Nastaliq fonts.
 *   **English (en)**
 *   **Spanish (es)**

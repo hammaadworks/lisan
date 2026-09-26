@@ -1,6 +1,6 @@
 # Voice Studio Guide
 
-The **Voice Studio** allows family members or caregivers to record their own voices for every word in the Shukr dictionary. This makes communication feel more personal and familiar for the user.
+The **Voice Studio** allows family members or caregivers to record their own voices for every word in the Lisan dictionary. This makes communication feel more personal and familiar for the user.
 
 ---
 
@@ -16,7 +16,7 @@ Voice Studio is an isolated, high-focus environment that operates independently 
 
 ## 📁 Voice Profiles
 
-Shukr supports multiple voice profiles (e.g., "Mama's Voice (UR)", "Brother's Voice (EN)").
+Lisan supports multiple voice profiles (e.g., "Mama's Voice (UR)", "Brother's Voice (EN)").
 
 ### System vs. Custom Voices
 *   **System Voices:** Pre-loaded audio assets that are **Locked**. They cannot be renamed, deleted, or overwritten to ensure a stable baseline.

@@ -31,7 +31,7 @@ const SYSTEM_ACTIONS: { value: string; label_en: string; label_ur: string; icon?
 ];
 
 export const GestureEditModal: React.FC<GestureEditModalProps> = ({ gesture, config, onClose, onSave }) => {
-  const { isPrimary, language, primaryLanguage, secondaryLanguage } = useLanguage();
+  const { language, primaryLanguage, secondaryLanguage, t } = useLanguage();
   const [activeTab, setActiveTab] = useState<GestureMappingType>(gesture.type);
   const [labelEn, setLabelEn] = useState(gesture.label_en || '');
   const [labelUr, setLabelUr] = useState(gesture.label_ur || '');
@@ -262,7 +262,7 @@ export const GestureEditModal: React.FC<GestureEditModalProps> = ({ gesture, con
           ) : (
             <div className="empty-sequence-hint">
                <List size={28} opacity={0.3} />
-               <p>{isPrimary ? 'الفاظ منتخب کریں' : 'Select words to speak'}</p>
+               <p>{t('gesture.selectWords')}</p>
             </div>
           )}
         </div>
@@ -271,7 +271,7 @@ export const GestureEditModal: React.FC<GestureEditModalProps> = ({ gesture, con
           <Search size={18} />
           <input 
             type="text" 
-            placeholder={isPrimary ? "لفظ تلاش کریں..." : "Search words..."}
+            placeholder={t('gesture.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -309,7 +309,7 @@ export const GestureEditModal: React.FC<GestureEditModalProps> = ({ gesture, con
             </div>
             
             <div className="recording-status-compact">
-               <h3>{recordingState === 'recording' ? (isPrimary ? 'ریکارڈنگ ہو رہی ہے...' : 'Recording...') : (isPrimary ? 'آڈیو ریکارڈ کریں' : 'Record Audio')}</h3>
+               <h3>{recordingState === 'recording' ? t('gesture.recording') : t('gesture.recordAudio')}</h3>
             </div>
 
             <div className="record-center-compact">
@@ -330,7 +330,7 @@ export const GestureEditModal: React.FC<GestureEditModalProps> = ({ gesture, con
 
             {hasExistingAudio && recordingState === 'idle' && (
               <div className="existing-audio-badge">
-                <Play size={14} fill="currentColor" /> {isPrimary ? 'پرانی ریکارڈنگ موجود ہے' : 'Existing recording found'}
+                <Play size={14} fill="currentColor" /> {t('gesture.existingFound')}
               </div>
             )}
          </div>
@@ -370,7 +370,7 @@ export const GestureEditModal: React.FC<GestureEditModalProps> = ({ gesture, con
         <div className="gesture-edit-header-compact">
           <div className="gesture-badge-compact">
              <span className="gesture-emoji-tiny">{gesture.id === 'fist' ? '✊' : gesture.id === 'mouth_open' ? '😮' : gesture.id === 'one_finger' ? '☝️' : '🖐️'}</span>
-             <h2>{isPrimary ? 'اشارہ تبدیل کریں' : 'Edit Gesture'}</h2>
+             <h2>{t('gesture.edit')}</h2>
           </div>
           <p className="gesture-id-text-compact">{gesture.id.replace('_', ' ')}</p>
         </div>
@@ -379,8 +379,7 @@ export const GestureEditModal: React.FC<GestureEditModalProps> = ({ gesture, con
           <button className={activeTab === 'action' ? 'active' : ''} onClick={() => setActiveTab('action')}>
             <Activity size={18} />
             <div className="tab-labels">
-               <span className="tab-ur">ایکشن</span>
-               <span className="tab-en">Action</span>
+               <span>{t('gesture.tabs.action')}</span>
             </div>
           </button>
           <button className={activeTab === 'words' ? 'active' : ''} onClick={() => {
@@ -389,15 +388,13 @@ export const GestureEditModal: React.FC<GestureEditModalProps> = ({ gesture, con
           }}>
             <List size={18} />
             <div className="tab-labels">
-               <span className="tab-ur">الفاظ</span>
-               <span className="tab-en">Words</span>
+               <span>{t('gesture.tabs.words')}</span>
             </div>
           </button>
           <button className={activeTab === 'audio' ? 'active' : ''} onClick={() => setActiveTab('audio')}>
             <Mic size={18} />
             <div className="tab-labels">
-               <span className="tab-ur">آڈیو</span>
-               <span className="tab-en">Audio</span>
+               <span>{t('gesture.tabs.audio')}</span>
             </div>
           </button>
         </div>
@@ -412,13 +409,13 @@ export const GestureEditModal: React.FC<GestureEditModalProps> = ({ gesture, con
           <div className="gesture-edit-labels-row">
             {(isDualLang || language === 'ur') && (
               <div className="label-input-wrapper-compact" dir="rtl">
-                <label>اردو نام</label>
+                <label>{t('gesture.labels.ur')}</label>
                 <input value={labelUr} onChange={e => setLabelUr(e.target.value)} placeholder="مثلاً اگلا" />
               </div>
             )}
             {(isDualLang || language === 'en') && (
               <div className="label-input-wrapper-compact">
-                <label>English Label</label>
+                <label>{t('gesture.labels.en')}</label>
                 <input value={labelEn} onChange={e => setLabelEn(e.target.value)} placeholder="e.g. Next" />
               </div>
             )}
@@ -426,10 +423,7 @@ export const GestureEditModal: React.FC<GestureEditModalProps> = ({ gesture, con
 
           <button className="btn-save-gesture-compact" onClick={handleSave} disabled={isProcessingAudio}>
             <Save size={20} />
-            <div className="btn-text-stack">
-               <span className="ur">محفوظ کریں</span>
-               <span className="en">Save Mapping</span>
-            </div>
+            <span>{t('common.save')}</span>
           </button>
         </div>
       </div>

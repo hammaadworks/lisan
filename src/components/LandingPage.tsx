@@ -437,7 +437,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             <div className="slide-visual-side">
                <div className="floating-mockup" style={{ width: '100%', maxWidth: '480px' }}>
                   <SentenceBuilder
-                     words={[{ id: 'intro_1', ur: 'السلام علیکم', en: 'Salam', icon: 'volume2' }]}
+                     words={[{ id: 'intro_1', text_primary: 'السلام علیکم', text_secondary: 'Salam', icon: 'volume2' }]}
                      onClear={() => {}}
                      onBackspace={() => {}}
                      onPlay={() => {}}
@@ -508,13 +508,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                 <div className="mockup-phone-tilted">
                    <div style={{ padding: '4.5rem 1.25rem 1.25rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                       <WordCard 
-                        item={{ id: 'sys_iwant', ur: 'مجھے', en: 'I want', roman: 'mujhe', icon: 'user' }} 
+                        item={{ id: 'sys_iwant', text_primary: 'مجھے', text_secondary: 'I want', icon: 'user' }} 
                         isFocused={false} 
                         variant={1} 
                         onClick={() => {}} 
                       />
                       <WordCard 
-                        item={{ id: 'sys_water', ur: 'پانی', en: 'Water', roman: 'paani', icon: 'droplets' }} 
+                        item={{ id: 'sys_water', text_primary: 'پانی', text_secondary: 'Water', icon: 'droplets' }} 
                         isFocused={true} 
                         variant={1} 
                         onClick={() => {}} 
@@ -554,7 +554,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                 </div>
                 <div className="mockup-ui-card-floating" style={{ bottom: '-15%', right: '5%' }}>
                    <WordCard 
-                      item={{ id: 'sys_apple', ur: 'سیب', en: 'Apple', roman: 'saib', icon: 'utensils' }} 
+                      item={{ id: 'sys_apple', text_primary: 'سیب', text_secondary: 'Apple', icon: 'utensils' }} 
                       isFocused={false} 
                       variant={1} 
                       onClick={() => {}} 

@@ -1,6 +1,5 @@
 import React from 'react';
 import { WordCard } from './WordCard';
-import { useLanguage } from '../hooks/useLanguage';
 
 interface WordPredictionsProps {
   predictions: any[];
@@ -17,7 +16,6 @@ export const WordPredictions: React.FC<WordPredictionsProps> = React.memo(({
   onSelect,
   className = '',
 }) => {
-  const { isPrimary } = useLanguage();
   if (!predictions || predictions.length === 0) return null;
 
   return (
@@ -28,7 +26,6 @@ export const WordPredictions: React.FC<WordPredictionsProps> = React.memo(({
           key={item.id || idx}
           item={item}
           isFocused={focusedIndex === offset + idx}
-          isPrimary={isPrimary}
           onClick={() => {
             if (onSelect) {
               onSelect(item);

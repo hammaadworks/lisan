@@ -1,6 +1,6 @@
 # Doodle Mode Guide
 
-**Doodle Mode** is a powerful visual interaction feature in Shukr that allows users to communicate by drawing simple symbols.
+**Doodle Mode** is a powerful visual interaction feature in Lisan that allows users to communicate by drawing simple symbols.
 
 ---
 
@@ -15,7 +15,7 @@
 
 ## 🧠 Custom Training
 
-Shukr allows every user to train the system to recognize their unique way of drawing a concept.
+Lisan allows every user to train the system to recognize their unique way of drawing a concept.
 
 ### Steps to Train
 1.  **Open Word Manager:** Navigate to `#words`.

@@ -1,6 +1,6 @@
-# Customizing Shukr
+# Customizing Lisan
 
-Shukr is designed to be highly tailorable. Whether you're a caregiver personalizing the grid or a developer setting up a regional deployment, this guide covers all levels of customization.
+Lisan is designed to be highly tailorable. Whether you're a caregiver personalizing the grid or a developer setting up a regional deployment, this guide covers all levels of customization.
 
 ---
 
@@ -42,7 +42,7 @@ Developers can seed the application with custom data by modifying `src/lib/data/
 
 ## 🤖 Generalized AI Configuration
 
-Shukr can connect to any AI provider (local or cloud) to assist with vocabulary management. 
+Lisan can connect to any AI provider (local or cloud) to assist with vocabulary management. 
 
 ### Configuration (Word Manager)
 - **Endpoint:** The full API URL (e.g., Gemini, OpenAI, or local Ollama).
@@ -53,7 +53,7 @@ Shukr can connect to any AI provider (local or cloud) to assist with vocabulary 
 
 ## 🌍 Global Localization
 
-Shukr is **Multilingual-first**. To add support for a new script or language:
+Lisan is **Multilingual-first**. To add support for a new script or language:
 1.  Add the language code to `SUPPORTED_LANGS` in `src/hooks/useLanguage.tsx`.
 2.  Populate the `translations` object in `vocabulary.json`.
 3.  Use the **Universe Porter** to share your localized configuration with others.

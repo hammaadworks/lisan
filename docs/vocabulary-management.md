@@ -1,6 +1,6 @@
 # Vocabulary Management
 
-Shukr manages a rich, multilingual dictionary through a unified schema that prioritizes phonetic accuracy and visual discovery.
+Lisan manages a rich, multilingual dictionary through a unified schema that prioritizes phonetic accuracy and visual discovery.
 
 ---
 

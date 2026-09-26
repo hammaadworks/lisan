@@ -22,7 +22,7 @@ interface DoodlePadProps {
 }
 
 export const DoodlePad: React.FC<DoodlePadProps> = ({ config, onRecognize, focusedIndex, onOpenAddWord, sentence }) => {
-  const { isPrimary, language } = useLanguage();
+  const { isPrimary, language, t } = useLanguage();
   const { playClick, speak } = useAudio();
   
   const [currentStrokes, setCurrentStrokes] = useState<Stroke[]>([]);
@@ -55,18 +55,12 @@ export const DoodlePad: React.FC<DoodlePadProps> = ({ config, onRecognize, focus
   const displayedPredictions = useMemo(() => {
     if (searchQuery.trim().length > 0) {
       if (searchResults.length === 0) {
-        const labels: Record<string, string> = {
-          ur: 'نیا لفظ؟',
-          en: 'Add Word?',
-          es: '¿Añadir palabra?',
-          ar: 'إضافة كلمة؟'
-        };
-        const addLabel = labels[language] || labels['en'];
+        const addLabel = t('doodle.addNew');
         return [{ 
           id: 'doodle_add_prompt', 
           ur: addLabel, 
           en: 'Add Word?', 
-          translations: labels,
+          translations: { ur: addLabel, en: 'Add Word?' },
           icon: 'plus', 
           isPrompt: true, 
           onClick: () => onOpenAddWord?.(searchQuery)
@@ -163,8 +157,8 @@ export const DoodlePad: React.FC<DoodlePadProps> = ({ config, onRecognize, focus
         {/* Predictions Area */}
         <div className="doodle-predictions-container">
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 8px 4px', fontSize: '0.7rem', fontWeight: 800, color: 'var(--color-primary)', textTransform: 'uppercase', opacity: 0.6 }}>
-             <span>{isPrimary ? 'تجاویز' : 'Suggestions'}</span>
-             <span>{searchQuery ? (isPrimary ? 'تلاش' : 'Searching') : (predictions.length > 0 ? (isPrimary ? 'ڈرائنگ' : 'Drawing') : (isPrimary ? 'مشہور' : 'Popular'))}</span>
+             <span>{t('doodle.suggestions')}</span>
+             <span>{searchQuery ? t('doodle.searching') : (predictions.length > 0 ? t('doodle.drawing') : t('doodle.popular'))}</span>
           </div>
           <WordPredictions 
             predictions={displayedPredictions} 
@@ -191,7 +185,7 @@ export const DoodlePad: React.FC<DoodlePadProps> = ({ config, onRecognize, focus
             </button>
             <input 
               type="text" 
-              placeholder={isPrimary ? "لفظ تلاش کریں..." : "Search for a word..."}
+              placeholder={t('doodle.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={(e) => { e.target.blur(); setIsKeyboardVisible(true); }}
@@ -208,7 +202,7 @@ export const DoodlePad: React.FC<DoodlePadProps> = ({ config, onRecognize, focus
               <button 
                 className="doodle-search-add" 
                 onClick={(e) => { e.stopPropagation(); onOpenAddWord?.(searchQuery); }}
-                title={isPrimary ? "نیا لفظ شامل کریں" : "Add New Word"}
+                title={t('doodle.addNew')}
               >
                 <Plus size={18} />
               </button>
@@ -239,7 +233,7 @@ export const DoodlePad: React.FC<DoodlePadProps> = ({ config, onRecognize, focus
               onClear={clearCanvas} 
               onTrain={() => {
                 if (currentStrokes.length === 0) {
-                  speak(isPrimary ? "پہلے کچھ ڈرا کریں!" : "Draw something first!");
+                  speak(t('doodle.drawFirst'));
                   return;
                 }
                 setShowTrainModal(true);

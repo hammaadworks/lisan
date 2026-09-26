@@ -11,7 +11,7 @@ interface PermissionDialogProps {
 }
 
 export const PermissionDialog: React.FC<PermissionDialogProps> = ({ onConfirm, onCancel, status, type }) => {
-  const { isPrimary } = useLanguage();
+  const { t } = useLanguage();
 
   const isMic = type === 'microphone';
 
@@ -23,31 +23,23 @@ export const PermissionDialog: React.FC<PermissionDialogProps> = ({ onConfirm, o
   const getTitle = () => {
     if (status === 'denied') {
       return isMic 
-        ? (isPrimary ? 'مائیکروفون بند ہے' : 'Microphone Access Denied')
-        : (isPrimary ? 'کیمرہ بند ہے' : 'Camera Access Denied');
+        ? t('dialogs.micDenied')
+        : t('dialogs.cameraDenied');
     }
     return isMic
-      ? (isPrimary ? 'مائیکروفون استعمال کریں؟' : 'Enable Microphone?')
-      : (isPrimary ? 'کیمرہ استعمال کریں؟' : 'Enable Hands-Free?');
+      ? t('dialogs.enableMic')
+      : t('dialogs.enableCamera');
   };
 
   const getDescription = () => {
     if (status === 'denied') {
       return isMic
-        ? (isPrimary 
-            ? 'آپ نے مائیکروفون بند کر دیا ہے۔ آواز ریکارڈ کرنے کے لیے براؤزر سیٹنگز میں جا کر اسے آن کریں۔' 
-            : 'Microphone access is blocked. To record audio, please enable it in your browser settings.')
-        : (isPrimary 
-            ? 'آپ نے کیمرہ بند کر دیا ہے۔ اشاروں کے لیے براؤزر سیٹنگز میں جا کر کیمرہ آن کریں۔' 
-            : 'Camera access is blocked. To use gestures, please enable it in your browser settings.');
+        ? t('dialogs.micDeniedDesc')
+        : t('dialogs.cameraDeniedDesc');
     }
     return isMic
-      ? (isPrimary 
-          ? 'شکریہ آپ کی آواز ریکارڈ کرنے کے لیے مائیکروفون استعمال کرتی ہے۔ آپ کی ریکارڈنگز صرف آپ کے آلے پر رہتی ہیں۔' 
-          : 'Shukr uses the microphone to record your voice. Your recordings are processed locally and never leave your device.')
-      : (isPrimary 
-          ? 'شکریہ آپ کے ہاتھ کے اشاروں کو پہچاننے کے لیے کیمرہ استعمال کرتی ہے۔ آپ کا ڈیٹا محفوظ رہتا ہے اور کہیں نہیں بھیجا جاتا۔' 
-          : 'Shukr uses the camera to recognize your hand gestures. Your video is processed locally and never leaves your device.');
+      ? t('dialogs.enableMicDesc')
+      : t('dialogs.enableCameraDesc');
   };
 
   return (
@@ -67,12 +59,12 @@ export const PermissionDialog: React.FC<PermissionDialogProps> = ({ onConfirm, o
 
         <div className="shukr-dialog-actions">
           <button className="shukr-dialog-btn btn-cancel" onClick={onCancel}>
-            {isPrimary ? 'بند کریں' : 'Close'}
+            {t('dialogs.close')}
           </button>
           {status !== 'denied' && (
             <button className="shukr-dialog-btn btn-confirm" onClick={onConfirm} disabled={status === 'requesting'}>
               <Check size={20} />
-              {isPrimary ? 'جی ہاں' : 'Allow Access'}
+              {t('dialogs.allow')}
             </button>
           )}
         </div>
@@ -117,6 +109,7 @@ interface ConfirmDialogProps {
 }
 
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({ isOpen, onClose, title, description, isDanger, onConfirm }) => {
+  const { t } = useLanguage();
   if (!isOpen) return null;
   return (
     <div className="shukr-dialog-overlay" onClick={onClose}>
@@ -127,14 +120,14 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({ isOpen, onClose, t
         </div>
         <div className="shukr-dialog-actions">
           <button className="shukr-dialog-btn btn-cancel" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button 
             className="shukr-dialog-btn btn-confirm" 
             onClick={() => { onConfirm(); onClose(); }}
             style={isDanger ? { background: 'var(--color-danger)' } : {}}
           >
-            Confirm
+            {t('common.save')}
           </button>
         </div>
       </div>
@@ -152,6 +145,7 @@ interface PromptDialogProps {
 }
 
 export const PromptDialog: React.FC<PromptDialogProps> = ({ isOpen, onClose, title, placeholder, defaultValue = '', onSubmit }) => {
+  const { t } = useLanguage();
   const [val, setVal] = useState(defaultValue);
 
   React.useEffect(() => {
@@ -182,13 +176,13 @@ export const PromptDialog: React.FC<PromptDialogProps> = ({ isOpen, onClose, tit
         </div>
         <div className="shukr-dialog-actions">
           <button className="shukr-dialog-btn btn-cancel" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button 
             className="shukr-dialog-btn btn-confirm" 
             onClick={() => { onSubmit(val); onClose(); }}
           >
-            Save
+            {t('common.save')}
           </button>
         </div>
       </div>
@@ -206,6 +200,7 @@ interface VoiceAddDialogProps {
 }
 
 export const VoiceAddDialog: React.FC<VoiceAddDialogProps> = ({ isOpen, onClose, title, languages, initialLanguage, onSubmit }) => {
+  const { t } = useLanguage();
   const [name, setName] = useState('');
   const [lang, setLang] = useState(initialLanguage);
   const [showLangSelect, setShowLangSelect] = useState(false);
@@ -229,7 +224,7 @@ export const VoiceAddDialog: React.FC<VoiceAddDialogProps> = ({ isOpen, onClose,
           <div className="shukr-dialog-desc" style={{ marginBottom: 20 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 20 }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, marginBottom: 8, color: 'var(--color-primary)' }}>VOICE NAME</label>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, marginBottom: 8, color: 'var(--color-primary)' }}>{t('settings.tabs.voice').toUpperCase()} {t('settings.sos.namePlaceholder').toUpperCase()}</label>
                 <input 
                   className="massive-input"
                   style={{ width: '100%', padding: '12px', borderRadius: '12px', fontSize: '1.1rem' }}
@@ -248,7 +243,7 @@ export const VoiceAddDialog: React.FC<VoiceAddDialogProps> = ({ isOpen, onClose,
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, marginBottom: 8, color: 'var(--color-primary)' }}>RECORDING LANGUAGE</label>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, marginBottom: 8, color: 'var(--color-primary)' }}>{t('settings.general.langPair').toUpperCase()}</label>
                 <button 
                   className="btn-icon-ios" 
                   onClick={() => setShowLangSelect(true)} 
@@ -276,14 +271,14 @@ export const VoiceAddDialog: React.FC<VoiceAddDialogProps> = ({ isOpen, onClose,
 
           <div className="shukr-dialog-actions">
             <button className="shukr-dialog-btn btn-cancel" onClick={onClose}>
-              Cancel
+              {t('common.cancel')}
             </button>
             <button 
               className="shukr-dialog-btn btn-confirm" 
               disabled={!name.trim()}
               onClick={() => { onSubmit(name, lang); onClose(); }}
             >
-              Create
+              {t('settings.addNew')}
             </button>
           </div>
         </div>

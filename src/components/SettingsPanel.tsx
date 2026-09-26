@@ -3,6 +3,7 @@ import {ChevronDown, ChevronLeft, Download, Edit2, Mic, RefreshCw, Settings, Tra
 import {translator} from '../lib/translator';
 import {universePorter} from '../lib/universePorter';
 import {universeDb} from '../lib/universeDb';
+import {vocabularyStore} from '../lib/vocabularyStore';
 import {WordEditor} from './WordEditor';
 import {AlertDialog, ConfirmDialog, PromptDialog, SelectDialog} from './modals/Dialogs';
 
@@ -38,8 +39,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                                                                 randomQuote,
                                                                 onNextQuote
                                                             }) => {
-    const { primaryLanguage, secondaryLanguage, setLanguagePair, language, isDualMode, setDualMode } = useLanguage();
-    const [activeTab, setActiveTab] = useState<TabType>(initialTab || 'contact');
+    const { primaryLanguage, secondaryLanguage, setLanguagePair, t } = useLanguage();
+    const [activeTab, setActiveTab] = useState<TabType>(initialTab || 'general');
     const [editingItem, setEditingItem] = useState<any | null>(initialEditingItem || null);
     const [editingType] = useState<EditingType>('word');
     const [editMode] = useState<'edit' | 'new'>('edit');
@@ -67,7 +68,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         value: p.id,
         label: `${p.name} (${p.language?.toUpperCase() || '?'})${p.editable === false ? ' [🔒]' : ''}`
     }));
-    const currentVoiceName = voiceOptions.find((o: any) => o.value === (config?.active_voice || ''))?.label || 'Select Voice';
+    const currentVoiceName = voiceOptions.find((o: any) => o.value === (config?.active_voice || ''))?.label || t('settings.voice.selectVoice');
 
     const handleRenameVoice = () => {
         const activeId = config?.active_voice;
@@ -202,8 +203,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         }
     }, [config]);
 
-    const quotes = config?.quotes || [];
-
     const handleBack = () => {
         if (editingItem) {
             setEditingItem(null);
@@ -213,16 +212,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     };
 
     const handleSave = async (item: any) => {
-        const newConfig = {...config};
-
         switch (editingType) {
             case 'word': {
                 // Check for duplicates
-                const allWords = newConfig.categories.flatMap((c: any) => c.items || []);
+                const allWords = config.categories.flatMap((c: any) => c.items || []);
                 const isDuplicate = allWords.some((i: any) => {
                     if (i.id === item.id) return false;
-                    const matchEn = i.translations?.en?.toLowerCase() === item.translations?.en?.toLowerCase() || i.en?.toLowerCase() === item.translations?.en?.toLowerCase();
-                    const matchUr = i.translations?.ur === item.translations?.ur || i.ur === item.translations?.ur;
+                    const matchEn = i.translations?.en?.toLowerCase() === item.translations?.en?.toLowerCase();
+                    const matchUr = i.translations?.ur === item.translations?.ur;
                     return matchEn || matchUr;
                 });
 
@@ -231,27 +228,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     return;
                 }
 
-                // Find the correct category and save
-                const categoryId = item.categoryId || item.category || 'general';
-
-                newConfig.categories = newConfig.categories.map((cat: any) => ({
-                    ...cat,
-                    items: cat.id === categoryId ? (editMode === 'new' ? [...cat.items, item] : cat.items.map((i: any) => i.id === item.id ? item : i)) : cat.items
-                }));
-
-                // Persist to IndexedDB safely
-                await universeDb.words.put({
-                    ...item,
-                    category: categoryId,
-                    usageCount: item.usageCount || 0,
-                    lastUsedAt: item.lastUsedAt || Date.now(),
-                    next: item.next || [],
-                    doodle_shapes: item.doodle_shapes || []
-                });
+                const updatedConfig = await vocabularyStore.saveConcept(item, config);
+                updateConfig(updatedConfig);
                 break;
             }
             case 'quote': {
                 let finalQuote = {...item};
+                const newConfig = {...config};
+                const quotes = newConfig.quotes || [];
 
                 if (!finalQuote.translations) finalQuote.translations = { ur: item.ur, en: item.en };
 
@@ -278,11 +262,11 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 if (finalQuote.id) {
                     await universeDb.quotes.put(finalQuote);
                 }
+                updateConfig(newConfig);
                 break;
             }
         }
 
-        updateConfig(newConfig);
         setEditingItem(null);
     };
 
@@ -292,27 +276,23 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
             desc: "Are you sure you want to delete this? This action is irreversible.",
             isDanger: true,
             action: async () => {
-                const newConfig = {...config};
-
                 switch (editingType) {
                     case 'word': {
-                        newConfig.categories = newConfig.categories.map((cat: any) => ({
-                            ...cat, items: cat.items.filter((i: any) => i.id !== itemId)
-                        }));
-                        // Remove from IndexedDB securely
-                        await universeDb.words.delete(itemId);
+                        const updatedConfig = await vocabularyStore.deleteConcept(itemId, config);
+                        updateConfig(updatedConfig);
                         break;
                     }
                     case 'quote': {
-                        newConfig.quotes = quotes.filter((q: any) => q.id !== itemId);
+                        const newConfig = { ...config };
+                        newConfig.quotes = (newConfig.quotes || []).filter((q: any) => q.id !== itemId);
                         if (itemId) {
                             await universeDb.quotes.delete(itemId);
                         }
+                        updateConfig(newConfig);
                         break;
                     }
                 }
 
-                updateConfig(newConfig);
                 setEditingItem(null);
             }
         });
@@ -325,23 +305,23 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 {editingItem ? <X size={32}/> : <ChevronLeft size={36}/>}
             </button>
             <h2>
-                {editingItem ? (editMode === 'new' ? 'Add New' : 'Edit') : 'Settings'}
+                {editingItem ? (editMode === 'new' ? t('settings.addNew') : t('settings.edit')) : t('settings.title')}
             </h2>
         </div>
 
         {/* Tabs */}
         {!editingItem && (<div className="settings-tabs">
             {[
-                {id: 'contact', label: 'Call', urdu: 'کال کریں', icon: Settings}, 
-                {id: 'voice', label: 'Voice', urdu: 'آواز', icon: Mic}, 
-                {id: 'data', label: 'Data', urdu: 'ڈیٹا', icon: RefreshCw},
-                {id: 'general', label: 'General', urdu: 'عام', icon: Settings},
+                {id: 'general', label: t('settings.tabs.general'), icon: Settings},
+                {id: 'contact', label: t('settings.tabs.contact'), icon: Settings}, 
+                {id: 'voice', label: t('settings.tabs.voice'), icon: Mic}, 
+                {id: 'data', label: t('settings.tabs.data'), icon: RefreshCw},
             ].map(tab => (<button
                 key={tab.id}
                 className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
                 onClick={() => setActiveTab(tab.id as TabType)}
             >
-                {language === 'ur' ? (<span className="urdu-tab">{tab.urdu}</span>) : (tab.label)}
+                {tab.label}
             </button>))}
         </div>)}
 
@@ -351,7 +331,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 {activeTab === 'contact' && (<div className="gestures-settings-container">
                     <div className="list-group">
                         <div style={{ marginBottom: 24 }}>
-                            <h3 style={{ margin: '0 0 12px 0', color: 'var(--color-primary)', fontSize: '1.2rem' }}>SOS Template (پیغام)</h3>
+                            <h3 style={{ margin: '0 0 12px 0', color: 'var(--color-primary)', fontSize: '1.2rem' }}>{t('settings.sos.template')}</h3>
                             <textarea 
                                 className="massive-input"
                                 style={{ width: '100%', height: 100, padding: 16, fontSize: '1.1rem', borderRadius: 24 }}
@@ -368,8 +348,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
                         <div className="massive-item" style={{ height: 100, marginBottom: 24 }}>
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                <span style={{ fontSize: '1.2rem', fontWeight: 800 }}>Countdown</span>
-                                <span className="urdu-tab" style={{ fontSize: '1.4rem', color: 'var(--color-primary)' }}>الٹی گنتی (سیکنڈ)</span>
+                                <span style={{ fontSize: '1.2rem', fontWeight: 800 }}>{t('settings.sos.countdown')}</span>
                             </div>
                             <div style={{ display: 'flex', gap: 8 }}>
                                 {[3, 5, 10].map(sec => (
@@ -395,7 +374,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                             </div>
                         </div>
 
-                        <h3 style={{ margin: '0 0 12px 0', color: 'var(--color-primary)', fontSize: '1.2rem' }}>Emergency Contacts (ایمرجنسی نمبر)</h3>
+                        <h3 style={{ margin: '0 0 12px 0', color: 'var(--color-primary)', fontSize: '1.2rem' }}>{t('settings.sos.contacts')}</h3>
                         {(config.emergency_contacts || []).map((contact: any, idx: number) => (
                             <div key={idx} className="massive-item"
                                  style={{flexDirection: 'column', gap: 12, marginBottom: 12}}>
@@ -404,7 +383,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                                         className="massive-input"
                                         dir="ltr"
                                         style={{flex: 1}}
-                                        placeholder="Name (نام)"
+                                        placeholder={t('settings.sos.namePlaceholder')}
                                         value={contact.name}
                                         onChange={(e) => {
                                             const newConfig = {...config};
@@ -416,7 +395,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                                         className="massive-input"
                                         dir="ltr"
                                         style={{flex: 1.5}}
-                                        placeholder="Phone (فون نمبر)"
+                                        placeholder={t('settings.sos.phonePlaceholder')}
                                         value={contact.phone}
                                         onChange={(e) => {
                                             const newConfig = {...config};
@@ -448,7 +427,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                             }}
                             onClick={() => setShowVoiceSelect(true)}
                         >
-                            <span>{currentVoiceName}</span>
+                            <span>{config?.active_voice ? currentVoiceName : t('settings.voice.selectVoice')}</span>
                             <ChevronDown size={24} color="var(--color-text-muted)"/>
                         </button>
 
@@ -504,7 +483,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         onClick={() => onOpenVoiceStudio()}
                     >
                         <Mic size={56}/>
-                        <span style={{fontSize: '1.6rem', fontWeight: 900}}>ریکارڈنگ ہوم (Open Voice Studio)</span>
+                        <span style={{fontSize: '1.6rem', fontWeight: 900}}>{t('settings.voice.openStudio')}</span>
                     </button>
                 </div>)}
 
@@ -514,9 +493,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         <div className="list-item massive-item"
                              style={{flexDirection: 'column', alignItems: 'flex-start', gap: 16}}>
                             <div style={{width: '100%'}}>
-                                <h3 style={{margin: 0, color: 'var(--color-primary)'}}>App Introduction (تعارف)</h3>
+                                <h3 style={{margin: 0, color: 'var(--color-primary)'}}>{t('settings.data.intro')}</h3>
                                 <p style={{fontSize: '0.9rem', color: '#8e8e93', marginTop: 4}}>
-                                    View the app's features and overview on the landing page.
+                                    {t('settings.data.introDesc')}
                                 </p>
                             </div>
                             <button className="btn-save w-full" style={{
@@ -525,36 +504,33 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                                 border: '1px solid var(--color-primary)',
                                 boxShadow: 'none'
                             }} onClick={onShowLanding}>
-                                View Landing Page
+                                {t('settings.data.viewLanding')}
                             </button>
                         </div>
 
                         <div className="list-item massive-item"
                              style={{flexDirection: 'column', alignItems: 'flex-start', gap: 16}}>
                             <div style={{width: '100%'}}>
-                                <h3 style={{margin: 0, color: 'var(--color-primary)'}}>Cloud Backup (بیک
-                                    اپ)</h3>
+                                <h3 style={{margin: 0, color: 'var(--color-primary)'}}>{t('settings.data.backup')}</h3>
                                 <p dir="ltr" style={{
                                     fontSize: '0.9rem', color: '#8e8e93', marginTop: 4, textAlign: 'inherit'
                                 }}>
-                                    Download your entire universe (words, voices, sketches) as a single
-                                    portable file.
+                                    {t('settings.data.backupDesc')}
                                 </p>
                             </div>
                             <button className="btn-save w-full" onClick={handleExportUniverse}
                                     disabled={isExporting}>
                                 {isExporting ? <RefreshCw size={24} className="animate-spin"/> : <Download size={24}/>}
-                                {isExporting ? "Exporting..." : "Backup Universe"}
+                                {isExporting ? "Exporting..." : t('settings.data.backupBtn')}
                             </button>
                         </div>
 
                         <div className="list-item massive-item"
                              style={{flexDirection: 'column', alignItems: 'flex-start', gap: 16}}>
                             <div style={{width: '100%'}}>
-                                <h3 style={{margin: 0, color: 'var(--color-primary)'}}>Restore Data (بحال
-                                    کریں)</h3>
+                                <h3 style={{margin: 0, color: 'var(--color-primary)'}}>{t('settings.data.restore')}</h3>
                                 <p style={{fontSize: '0.9rem', color: '#8e8e93', marginTop: 4}}>
-                                    Restore your universe from a previously saved backup file.
+                                    {t('settings.data.restoreDesc')}
                                 </p>
                             </div>
                             <label className="btn-save w-full" style={{
@@ -565,7 +541,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                                 border: '1px solid rgba(45,90,39,0.1)'
                             }}>
                                 <Upload size={24}/>
-                                Restore from File
+                                {t('settings.data.restoreBtn')}
                                 <input type="file" accept=".json" onChange={handleImportUniverse}
                                        style={{display: 'none'}}/>
                             </label>
@@ -574,9 +550,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         <div className="list-item massive-item"
                              style={{flexDirection: 'column', alignItems: 'flex-start', gap: 16, borderTop: '1px solid #eee', paddingTop: 24, marginTop: 12}}>
                             <div style={{width: '100%'}}>
-                                <h3 style={{margin: 0, color: '#ff3b30'}}>Hard Reset (مکمل ری سیٹ)</h3>
+                                <h3 style={{margin: 0, color: '#ff3b30'}}>{t('settings.data.hardReset')}</h3>
                                 <p style={{fontSize: '0.9rem', color: '#8e8e93', marginTop: 4}}>
-                                    Clear all local data and reset the version back to 1.
+                                    {t('settings.data.hardResetDesc')}
                                 </p>
                             </div>
                             <button 
@@ -588,8 +564,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                                 }}
                                 onClick={() => {
                                     setConfirmInfo({
-                                        title: "Hard Reset?",
-                                        desc: "This will DELETE all your custom words, voices, and reset the app. Are you absolutely sure?",
+                                        title: t('settings.data.hardResetBtn') + "?",
+                                        desc: t('settings.data.hardResetConfirm'),
                                         isDanger: true,
                                         action: async () => {
                                             Object.keys(localStorage).forEach(key => {
@@ -604,7 +580,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                                 }}
                             >
                                 <Trash2 size={24}/>
-                                Hard Reset App
+                                {t('settings.data.hardResetBtn')}
                             </button>
                         </div>
                     </div>
@@ -614,7 +590,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 {activeTab === 'general' && (<div className="gestures-settings-container">
                     <div className="list-group">
                         <div style={{ marginBottom: 24 }}>
-                            <h3 style={{ margin: '0 0 12px 0', color: 'var(--color-primary)', fontSize: '1.2rem' }}>User Nickname (نام)</h3>
+                            <h3 style={{ margin: '0 0 12px 0', color: 'var(--color-primary)', fontSize: '1.2rem' }}>{t('settings.general.nickname')}</h3>
                             <input 
                                 className="massive-input"
                                 style={{ width: '100%', height: 70, padding: 16, fontSize: '1.2rem', borderRadius: 24 }}
@@ -629,7 +605,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         <div className="list-item massive-item"
                              style={{flexDirection: 'column', alignItems: 'flex-start', gap: 16, marginBottom: 24}}>
                             <div style={{width: '100%'}}>
-                                <h3 style={{margin: 0, color: 'var(--color-primary)'}}>Language Pair (زبان کا انتخاب)</h3>
+                                <h3 style={{margin: 0, color: 'var(--color-primary)'}}>{t('settings.general.langPair')}</h3>
                                 <p style={{fontSize: '0.9rem', color: '#8e8e93', marginTop: 4}}>
                                     Select the language pair for the User and Caregiver.
                                 </p>
@@ -637,7 +613,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                             
                             <div style={{ display: 'flex', width: '100%', gap: 12 }}>
                                 <div style={{ flex: 1 }}>
-                                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-primary)', display: 'block', marginBottom: 4 }}>Primary (User)</label>
+                                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-primary)', display: 'block', marginBottom: 4 }}>{t('settings.general.primary')}</label>
                                     <button 
                                         className="massive-input" 
                                         style={{ width: '100%', height: 60, fontSize: '1rem', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
@@ -647,59 +623,22 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                                         <ChevronDown size={20} />
                                     </button>
                                 </div>
-                                {isDualMode && (
-                                    <div style={{ flex: 1 }}>
-                                        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-primary)', display: 'block', marginBottom: 4 }}>Secondary (Helper)</label>
-                                        <button 
-                                            className="massive-input" 
-                                            style={{ width: '100%', height: 60, fontSize: '1rem', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
-                                            onClick={() => setShowSecondarySelect(true)}
-                                        >
-                                            <span>{SUPPORTED_LANGS.find(l => l.code === secondaryLanguage)?.label}</span>
-                                            <ChevronDown size={20} />
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="massive-item" style={{ height: 100, marginBottom: 24 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                                <div style={{ 
-                                    background: isDualMode ? 'rgba(45,90,39,0.1)' : '#f2f2f7',
-                                    padding: 16,
-                                    borderRadius: 18,
-                                    color: isDualMode ? 'var(--color-primary)' : '#8e8e93'
-                                }}>
-                                    <RefreshCw size={32}/>
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <span style={{ fontSize: '1.2rem', fontWeight: 800 }}>Dual Language</span>
-                                    <span className="urdu-tab" style={{ fontSize: '1.4rem', color: 'var(--color-primary)', lineHeight: 1 }}>دوہری زبان</span>
+                                <div style={{ flex: 1 }}>
+                                    <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-primary)', display: 'block', marginBottom: 4 }}>{t('settings.general.secondary')}</label>
+                                    <button 
+                                        className="massive-input" 
+                                        style={{ width: '100%', height: 60, fontSize: '1rem', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+                                        onClick={() => setShowSecondarySelect(true)}
+                                    >
+                                        <span>{SUPPORTED_LANGS.find(l => l.code === secondaryLanguage)?.label}</span>
+                                        <ChevronDown size={20} />
+                                    </button>
                                 </div>
                             </div>
-                            <button 
-                                className={`huge-btn ${isDualMode ? 'active' : ''}`}
-                                style={{ 
-                                    width: 120, 
-                                    height: 64, 
-                                    borderRadius: 32,
-                                    background: isDualMode ? 'var(--color-primary)' : '#e5e5ea',
-                                    color: isDualMode ? 'white' : '#8e8e93',
-                                    transition: 'all 0.3s ease',
-                                    fontSize: '1.2rem',
-                                    fontWeight: 900
-                                }}
-                                onClick={() => {
-                                    setDualMode(!isDualMode);
-                                }}
-                            >
-                                {isDualMode ? 'ON' : 'OFF'}
-                            </button>
                         </div>
 
                         <div style={{ marginBottom: 24 }}>
-                            <h3 style={{ margin: '0 0 12px 0', color: 'var(--color-primary)', fontSize: '1.2rem' }}>Speech Rate (رفتار)</h3>
+                            <h3 style={{ margin: '0 0 12px 0', color: 'var(--color-primary)', fontSize: '1.2rem' }}>{t('settings.general.speechRate')}</h3>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                                 <input 
                                     type="range"
@@ -730,8 +669,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                                     {config.preferences?.enable_click_sound !== false ? <Volume2 size={32}/> : <VolumeX size={32}/>}
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <span style={{ fontSize: '1.2rem', fontWeight: 800 }}>Button Sound</span>
-                                    <span className="urdu-tab" style={{ fontSize: '1.4rem', color: 'var(--color-primary)', lineHeight: 1 }}>بٹن کی آواز</span>
+                                    <span style={{ fontSize: '1.2rem', fontWeight: 800 }}>{t('settings.general.buttonSound')}</span>
                                 </div>
                             </div>
                             <button 
@@ -753,7 +691,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                                     updateConfig(newConfig);
                                 }}
                             >
-                                {config.preferences?.enable_click_sound !== false ? 'ON' : 'OFF'}
+                                {config.preferences?.enable_click_sound !== false ? t('common.on') : t('common.off')}
                             </button>
                         </div>
                     </div>
@@ -824,8 +762,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         <SelectDialog
             isOpen={showPrimarySelect}
             onClose={() => setShowPrimarySelect(false)}
-            title="Primary Language (User)"
-            options={SUPPORTED_LANGS.filter(l => l.code !== secondaryLanguage).map(l => ({ value: l.code, label: l.label }))}
+            title={t('settings.general.primary')}
+            options={SUPPORTED_LANGS.map(l => ({ value: l.code, label: l.label }))}
             selectedValue={primaryLanguage}
             onSelect={(val) => setLanguagePair(val, secondaryLanguage)}
         />
@@ -833,8 +771,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         <SelectDialog
             isOpen={showSecondarySelect}
             onClose={() => setShowSecondarySelect(false)}
-            title="Secondary Language (Helper)"
-            options={SUPPORTED_LANGS.filter(l => l.code !== primaryLanguage).map(l => ({ value: l.code, label: l.label }))}
+            title={t('settings.general.secondary')}
+            options={SUPPORTED_LANGS.map(l => ({ value: l.code, label: l.label }))}
             selectedValue={secondaryLanguage}
             onSelect={(val) => setLanguagePair(primaryLanguage, val)}
         />

@@ -242,6 +242,7 @@ export const WordManager: React.FC<WordManagerProps> = ({ onClose, onRecord }) =
   const [newWordKey, setNewWordKey] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [showAiConfig, setShowAiConfig] = useState(false);
+  const [displayLanguage, setDisplayLanguage] = useState('en');
 
   // Local state for the word being edited
   const [editableWord, setEditableWord] = useState<WordUniverseItem | null>(null);
@@ -324,8 +325,8 @@ export const WordManager: React.FC<WordManagerProps> = ({ onClose, onRecord }) =
     setIsAiLoading(true);
     setError(null);
     try {
-      const suggestion = await aiProvider.getSuggestion(editableWord, config);
-      if (suggestion) {
+      const suggestion = await aiProvider.getSuggestion(editableWord.en || editableWord.ur || '', config);
+      if (suggestion && suggestion.translations && suggestion.transliterations) {
         const updatedWord: WordUniverseItem = {
           ...editableWord,
           translations: {
@@ -336,10 +337,10 @@ export const WordManager: React.FC<WordManagerProps> = ({ onClose, onRecord }) =
             ...editableWord.transliterations,
             ...suggestion.transliterations
           },
-          doodle_shapes: suggestion.doodle_shapes,
-          ur: suggestion.translations['ur'],
-          en: suggestion.translations['en'],
-          roman: suggestion.transliterations['ur']?.['en']
+          doodle_shapes: suggestion.doodle_shapes || [],
+          ur: suggestion.translations['ur'] || editableWord.ur,
+          en: suggestion.translations['en'] || editableWord.en,
+          roman: suggestion.transliterations['ur']?.['en'] || editableWord.roman
         };
         setEditableWord(updatedWord);
       }
@@ -367,7 +368,7 @@ export const WordManager: React.FC<WordManagerProps> = ({ onClose, onRecord }) =
     setError(null);
     try {
       const suggestion = await aiProvider.getSuggestion(newWordKey.trim(), config);
-      if (suggestion) {
+      if (suggestion && suggestion.translations && suggestion.transliterations) {
         const generatedId = (suggestion.translations['en'] || newWordKey).toLowerCase().replace(/[^a-z0-9]/g, '_');
         const newWordEntry: WordUniverseItem = {
           id: generatedId,
@@ -376,13 +377,13 @@ export const WordManager: React.FC<WordManagerProps> = ({ onClose, onRecord }) =
           usageCount: 0,
           lastUsedAt: Date.now(),
           timeBias: [],
-          doodle_shapes: suggestion.doodle_shapes,
+          doodle_shapes: suggestion.doodle_shapes || [],
           translations: suggestion.translations,
           transliterations: suggestion.transliterations,
           verified: false,
-          ur: suggestion.translations['ur'],
-          en: suggestion.translations['en'],
-          roman: suggestion.transliterations['ur']?.['en'],
+          ur: suggestion.translations['ur'] || '',
+          en: suggestion.translations['en'] || '',
+          roman: suggestion.transliterations['ur']?.['en'] || '',
           category: 'cat_custom',
           categoryId: 'cat_custom'
         };
@@ -435,15 +436,24 @@ export const WordManager: React.FC<WordManagerProps> = ({ onClose, onRecord }) =
   }
 
   return (
-    <div className="settings-panel naani-friendly" lang="en" dir="ltr" style={{ fontFamily: 'var(--font-en)' }}>
+    <div className="settings-panel naani-friendly" lang={displayLanguage} dir={displayLanguage === 'ur' || displayLanguage === 'ar' ? 'rtl' : 'ltr'} style={{ fontFamily: displayLanguage === 'ur' || displayLanguage === 'ar' ? 'var(--font-ur)' : 'var(--font-en)' }}>
       <div className="settings-header">
         <button className="btn-icon large-icon" onClick={onClose}>
           <ChevronLeft size={36} />
         </button>
         <div style={{ textAlign: 'center', flex: 1 }}>
           <h2 style={{ margin: 0 }}>Word Manager</h2>
-          <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--color-primary)' }}>
+          <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
             {verifiedCount} / {words.length} Verified
+            <select 
+              value={displayLanguage} 
+              onChange={(e) => setDisplayLanguage(e.target.value)}
+              style={{ background: 'rgba(45, 90, 39, 0.05)', border: 'none', borderRadius: 8, padding: '2px 8px', fontSize: '0.7rem', fontWeight: 900, color: 'var(--color-primary)' }}
+            >
+              {SUPPORTED_LANGS.map(l => (
+                <option key={l.code} value={l.code}>{l.code.toUpperCase()}</option>
+              ))}
+            </select>
           </div>
         </div>
         <button className="btn-icon large-icon" onClick={() => setShowAiConfig(!showAiConfig)}>

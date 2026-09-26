@@ -35,23 +35,23 @@ export const VoiceStudio: React.FC<VoiceStudioProps> = ({
   initialVoiceId,
   initialLanguage
 }) => {
-  const { language: globalLanguage, secondaryLanguage } = useLanguage();
+  const { language: globalLanguage, secondaryLanguage: globalSecondary } = useLanguage();
   const { playClick } = useAudio();
-  const [recordingLanguage, setRecordingLanguage] = useState(initialLanguage || globalLanguage);
-  const [helperLanguage, setHelperLanguage] = useState(secondaryLanguage || 'en');
+  const [primaryLanguage, setPrimaryLanguage] = useState(initialLanguage || globalLanguage);
+  const [secondaryLanguage, setSecondaryLanguage] = useState(globalSecondary || 'en');
   const [showProgressInfo, setShowProgressInfo] = useState(false);
   const [editingWord, setEditingWord] = useState<any | null>(null);
   const [isNewWord, setIsNewWord] = useState(false);
   
   useEffect(() => {
-    (window as any)._voiceStudioInfoLang = helperLanguage;
+    (window as any)._voiceStudioSecondaryLang = secondaryLanguage;
     return () => {
-      delete (window as any)._voiceStudioInfoLang;
+      delete (window as any)._voiceStudioSecondaryLang;
     };
-  }, [helperLanguage]);
+  }, [secondaryLanguage]);
 
   const voiceOptions = (config.voices || [])
-    .filter((p: any) => p.language === recordingLanguage)
+    .filter((p: any) => p.language === primaryLanguage)
     .map((p: any) => ({ value: p.id, label: `${p.name} (${p.language?.toUpperCase() || '?'})` }));
 
   const [activeVoice, setActiveVoice] = useState(() => {
@@ -68,7 +68,7 @@ export const VoiceStudio: React.FC<VoiceStudioProps> = ({
         setActiveVoice('');
       }
     }
-  }, [recordingLanguage, voiceOptions, activeVoice]);
+  }, [primaryLanguage, voiceOptions, activeVoice]);
 
   const [recordedWordIds, setRecordedWordIds] = useState<Set<string>>(new Set());
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -150,7 +150,7 @@ export const VoiceStudio: React.FC<VoiceStudioProps> = ({
     refreshRecordedStatus();
     setHasAutoJumped(false); // Reset jump flag when voice/lang changes
     return () => stopReviewAudio();
-  }, [refreshRecordedStatus, activeVoice, recordingLanguage, stopReviewAudio]);
+  }, [refreshRecordedStatus, activeVoice, primaryLanguage, stopReviewAudio]);
 
   const allWords = useMemo(() => {
     return (config.words || []).map((item: any) => ({ ...item }));
@@ -175,7 +175,7 @@ export const VoiceStudio: React.FC<VoiceStudioProps> = ({
     // We only jump if we haven't jumped yet, we have words, and we have FETCHED the recorded status
     // recordedWordIds.size might be 0 if nothing is recorded, but we need to know if it's the 
     // result of a query or just initial state. 
-    // Since we reset hasAutoJumped when activeVoice/recordingLanguage changes, 
+    // Since we reset hasAutoJumped when activeVoice/primaryLanguage changes, 
     // and refreshRecordedStatus is called in the same effect, 
     // we should wait until we have a definitive answer.
     
@@ -345,7 +345,7 @@ export const VoiceStudio: React.FC<VoiceStudioProps> = ({
     const newVoices = [...(config.voices || []), voiceData];
     updateConfig({ ...config, voices: newVoices, active_voice: id });
     setActiveVoice(id);
-    setRecordingLanguage(lang);
+    setPrimaryLanguage(lang);
     setShowVoiceAddDialog(false);
   };
 
@@ -409,7 +409,7 @@ export const VoiceStudio: React.FC<VoiceStudioProps> = ({
             }
 
             const newVoices = (config.voices || []).filter((p: any) => p.id !== activeVoice);
-            const fallbackVoice = newVoices.find((p: any) => p.language === recordingLanguage)?.id || (newVoices.length > 0 ? newVoices[0].id : '');
+            const fallbackVoice = newVoices.find((p: any) => p.language === primaryLanguage)?.id || (newVoices.length > 0 ? newVoices[0].id : '');
             updateConfig({ ...config, voices: newVoices, active_voice: fallbackVoice });
             setActiveVoice(fallbackVoice);
             refreshRecordedStatus();
@@ -457,7 +457,7 @@ export const VoiceStudio: React.FC<VoiceStudioProps> = ({
       lastUsedAt: 0,
       timeBias: [],
       doodle_shapes: ['custom'],
-      translations: { [recordingLanguage]: '', [helperLanguage]: '' }
+      translations: { [primaryLanguage]: '', [secondaryLanguage]: '' }
     });
   };
 
@@ -466,20 +466,20 @@ export const VoiceStudio: React.FC<VoiceStudioProps> = ({
       <header className="apple-header consistent-header" dir="ltr">
         <div className="header-grid-layout">
           <div className="header-cell">
-            <button className="btn-icon-ios" onClick={() => setShowLanguageSelect(true)} aria-label="Recording Language" style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <button className="btn-icon-ios" onClick={() => setShowLanguageSelect(true)} aria-label="Primary Language" style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Mic size={16} color="var(--color-primary)" />
-              <div style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--color-primary)' }}>{recordingLanguage.toUpperCase()}</div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--color-primary)' }}>{primaryLanguage.toUpperCase()}</div>
             </button>
           </div>
           <div className="header-cell">
             <button 
               className="btn-icon-ios highlight" 
               onClick={() => setShowHelperSelect(true)} 
-              title="Info Language"
+              title="Secondary Language"
               style={{ background: 'rgba(212, 175, 55, 0.1)', color: 'var(--color-accent)', border: 'none', display: 'flex', flexDirection: 'column', gap: 2 }}
             >
               <Languages size={16} />
-              <div style={{ fontSize: '0.65rem', fontWeight: 900 }}>{helperLanguage.toUpperCase()}</div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 900 }}>{secondaryLanguage.toUpperCase()}</div>
             </button>
           </div>
           <div className="header-cell span-2">
@@ -551,7 +551,7 @@ export const VoiceStudio: React.FC<VoiceStudioProps> = ({
           {currentWord ? (
             <>
               <div className="word-card-wrap" style={{ position: 'relative' }}>
-                <WordCard item={currentWord} isFocused={false} onClick={() => {}} variant={1} className={isCurrentRecorded ? 'recorded-card' : ''} languageOverride={recordingLanguage} helperLanguageOverride={helperLanguage} forceDualMode={true} />
+                <WordCard item={currentWord} isFocused={false} onClick={() => {}} variant={1} className={isCurrentRecorded ? 'recorded-card' : ''} languageOverride={primaryLanguage} helperLanguageOverride={secondaryLanguage} />
                 <button onClick={() => { setIsNewWord(false); setEditingWord(currentWord); }} style={{ position: 'absolute', top: -10, right: -10, background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '50%', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-soft)', cursor: 'pointer', zIndex: 10 }} title="Edit word metadata"><Edit2 size={20} /></button>
               </div>
               <div className="record-center-brand">
@@ -619,9 +619,9 @@ export const VoiceStudio: React.FC<VoiceStudioProps> = ({
       <ConfirmDialog isOpen={!!confirmInfo} onClose={() => setConfirmInfo(null)} title={confirmInfo?.title || ''} description={confirmInfo?.desc || ''} isDanger={confirmInfo?.isDanger} onConfirm={() => confirmInfo?.action()} />
       <PromptDialog isOpen={!!promptInfo} onClose={() => setPromptInfo(null)} title={promptInfo?.title || ''} placeholder={promptInfo?.placeholder} defaultValue={promptInfo?.defaultValue} onSubmit={(val) => promptInfo?.action(val)} />
       <SelectDialog isOpen={showVoiceSelect} onClose={() => setShowVoiceSelect(false)} title="Select Voice" options={voiceOptions} selectedValue={activeVoice} onSelect={(val) => { setActiveVoice(val); updateConfig({ ...config, active_voice: val }); handleRedo(); }} />
-      <SelectDialog isOpen={showLanguageSelect} onClose={() => setShowLanguageSelect(false)} title="Recording Language" options={languageOptions} selectedValue={recordingLanguage} onSelect={(val) => { setRecordingLanguage(val); handleRedo(); }} />
-      <SelectDialog isOpen={showHelperSelect} onClose={() => setShowHelperSelect(false)} title="Info Language (Display)" options={languageOptions} selectedValue={helperLanguage} onSelect={(val) => setHelperLanguage(val)} />
-      <VoiceAddDialog isOpen={showVoiceAddDialog} onClose={() => setShowVoiceAddDialog(false)} title="New Voice" languages={languageOptions} initialLanguage={recordingLanguage} onSubmit={handleFinishAddVoice} />
+      <SelectDialog isOpen={showLanguageSelect} onClose={() => setShowLanguageSelect(false)} title="Primary Language" options={languageOptions} selectedValue={primaryLanguage} onSelect={(val) => { setPrimaryLanguage(val); handleRedo(); }} />
+      <SelectDialog isOpen={showHelperSelect} onClose={() => setShowHelperSelect(false)} title="Secondary Language" options={languageOptions} selectedValue={secondaryLanguage} onSelect={(val) => setSecondaryLanguage(val)} />
+      <VoiceAddDialog isOpen={showVoiceAddDialog} onClose={() => setShowVoiceAddDialog(false)} title="New Voice" languages={languageOptions} initialLanguage={primaryLanguage} onSubmit={handleFinishAddVoice} />
       {editingWord && (
         <WordEditor item={editingWord} isNew={isNewWord} onClose={() => setEditingWord(null)} onSave={handleSaveWord} onDelete={handleDeleteWord} existingWords={allWords} />
       )}

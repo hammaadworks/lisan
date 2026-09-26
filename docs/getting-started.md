@@ -1,20 +1,20 @@
-# Getting Started with Shukr
+# Getting Started with Lisan
 
-Shukr is an adaptive AAC (Augmentative and Alternative Communication) platform designed to be universally accessible. Whether you're a user, a caregiver, or a developer, getting started is straightforward.
+Lisan is an adaptive AAC (Augmentative and Alternative Communication) platform designed to be universally accessible. Whether you're a user, a caregiver, or a developer, getting started is straightforward.
 
 ---
 
 ## 📱 For Users (Installation)
 
-Shukr is a **Progressive Web App (PWA)**. It runs in your browser but installs like a native app, providing full offline access and a dedicated home screen icon.
+Lisan is a **Progressive Web App (PWA)**. It runs in your browser but installs like a native app, providing full offline access and a dedicated home screen icon.
 
 ### Installation Steps
 
-1.  **Open the App:** Navigate to the Shukr deployment URL using a modern browser (Chrome, Safari, or Edge).
+1.  **Open the App:** Navigate to the Lisan deployment URL using a modern browser (Chrome, Safari, or Edge).
 2.  **Add to Home Screen:**
     *   **iOS (iPhone/iPad):** Tap the **Share** button and select **Add to Home Screen**.
     *   **Android:** Tap the browser menu (three dots) and select **Install App** or **Add to Home Screen**.
-3.  **Launch:** Open the Shukr icon from your home screen. It will launch in a standalone, immersive window.
+3.  **Launch:** Open the Lisan icon from your home screen. It will launch in a standalone, immersive window.
 
 ### Initial Configuration
 On first launch, you will be prompted to select your **Language Pair**:
@@ -26,7 +26,7 @@ On first launch, you will be prompted to select your **Language Pair**:
 
 ## 💻 For Developers (Setup)
 
-Shukr is an open-source project. We welcome contributors to help expand our gesture models and language support.
+Lisan is an open-source project. We welcome contributors to help expand our gesture models and language support.
 
 ### Prerequisites
 *   [Node.js](https://nodejs.org/) (v18+)
@@ -36,8 +36,8 @@ Shukr is an open-source project. We welcome contributors to help expand our gest
 
 1.  **Clone & Install:**
     ```bash
-    git clone https://github.com/hammaadworks/shukr.git
-    cd shukr
+    git clone https://github.com/hammaadworks/lisan.git
+    cd lisan
     pnpm install
     ```
 
@@ -61,7 +61,7 @@ For AI features (automated word fixes), you can set defaults in a `.env` file:
 
 ## 🛡️ Privacy & Security
 
-Shukr is **Offline-First and Local-Only**.
+Lisan is **Offline-First and Local-Only**.
 *   **Privacy by Design:** Your voice recordings, custom words, and camera data never touch a server.
 *   **Local AI:** All gesture recognition happens on your local GPU/CPU.
 *   **No Tracking:** We do not include any third-party tracking or telemetry.

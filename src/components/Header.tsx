@@ -3,16 +3,12 @@ import {Camera, Megaphone, Settings, X} from 'lucide-react';
 import {ShukrButton} from './ShukrButton';
 import {useAudio} from '../hooks/useAudio';
 import {useLanguage} from '../hooks/useLanguage';
-import {GestureLegend} from './GestureLegend';
 import { type GestureDefinition } from '../recognition/gestures/types';
 
 interface HeaderProps {
     onOpenSettings: (tab?: string) => void;
-    isTrackingEnabled: boolean;
-    isRecognitionActive: boolean;
     toggleTracking: () => void;
     hasUnsyncedChanges: boolean;
-    isModelLoaded: boolean;
     onSOS: () => void;
     onHome: () => void;
     isSentenceBuilderActive: boolean;
@@ -24,34 +20,33 @@ interface HeaderProps {
     cameraButtonRef?: React.RefObject<HTMLButtonElement | null>;
     gestureMappings?: Record<string, GestureDefinition>;
     onLongPressGesture?: (gesture: GestureDefinition) => void;
-    onTriggerGesture?: (gestureKey: string) => void;
-    gestureHits?: Record<string, number>;
     onLanguageClick?: () => void;
     customLanguageLabel?: string;
+    showLanguageToggle?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
                                                   onOpenSettings,
-                                                  isTrackingEnabled,
                                                   toggleTracking,
                                                   hasUnsyncedChanges,
-                                                  isModelLoaded,
                                                   onSOS,
                                                   onHome,
                                                   isSentenceBuilderActive,
                                                   toggleSentenceBuilder,
+                                                  // @ts-ignore
                                                   lastGesture,
                                                   // @ts-ignore
                                                   isPrimary,
                                                   focusedIndex,
                                                   showCloseDropzone = false,
                                                   cameraButtonRef,
+                                                  // @ts-ignore
                                                   gestureMappings = {},
+                                                  // @ts-ignore
                                                   onLongPressGesture = () => {},
-                                                  onTriggerGesture = () => {},
-                                                  gestureHits = {},
                                                   onLanguageClick,
-                                                  customLanguageLabel
+                                                  customLanguageLabel,
+                                                  showLanguageToggle = true
                                               }) => {
     const {playClick} = useAudio();
     const {language, setLanguage, primaryLanguage, secondaryLanguage} = useLanguage();
@@ -69,7 +64,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <div className="header-cell">
                     <button
                         ref={cameraButtonRef}
-                        className={`btn-icon-ios ${isTrackingEnabled ? 'active' : 'inactive'} ${focusedIndex === 0 ? 'focused-item' : ''} ${showCloseDropzone ? 'drop-active' : ''}`}
+                        className={`btn-icon-ios ${focusedIndex === 0 ? 'focused-item' : ''} ${showCloseDropzone ? 'drop-active' : ''}`}
                         onClick={() => {
                             playClick();
                             toggleTracking();
@@ -79,11 +74,7 @@ export const Header: React.FC<HeaderProps> = ({
                         {showCloseDropzone ? (
                             <X size={30} color="#DC2626" strokeWidth={3} className="animate-pulse" />
                         ) : (
-                            <>
-                                <Camera size={22} color={isTrackingEnabled ? "var(--color-primary)" : "#9CA3AF"}/>
-                                {!isTrackingEnabled && <div className="inactive-slash"/>}
-                                {isTrackingEnabled && !isModelLoaded && <div className="loading-dot-ios-mini"/>}
-                            </>
+                            <Camera size={22} color="var(--color-primary)" />
                         )}
                     </button>
                 </div>
@@ -118,21 +109,23 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
 
                 {/* 1fr: Language */}
-                <div className="header-cell">
-                    <button
-                        className={`btn-icon-ios ${focusedIndex === 3 ? 'focused-item' : ''}`}
-                        onClick={onLanguageClick ? () => { playClick(); onLanguageClick(); } : toggleLang}
-                        aria-label="Switch Language"
-                    >
-                        <div className="lang-init-display" style={{ 
-                            fontSize: '0.9rem', 
-                            fontWeight: 800, 
-                            color: 'var(--color-primary)'
-                        }}>
-                            {customLanguageLabel ? customLanguageLabel.toUpperCase() : language.toUpperCase()}
-                        </div>
-                    </button>
-                </div>
+                {showLanguageToggle ? (
+                    <div className="header-cell">
+                        <button
+                            className={`btn-icon-ios ${focusedIndex === 3 ? 'focused-item' : ''}`}
+                            onClick={onLanguageClick ? () => { playClick(); onLanguageClick(); } : toggleLang}
+                            aria-label="Switch Language"
+                        >
+                            <div className="lang-init-display" style={{ 
+                                fontSize: '0.9rem', 
+                                fontWeight: 800, 
+                                color: 'var(--color-primary)'
+                            }}>
+                                {customLanguageLabel ? customLanguageLabel.toUpperCase() : language.toUpperCase()}
+                            </div>
+                        </button>
+                    </div>
+                ) : <div className="header-cell" />}
 
                 {/* 1fr: Settings */}
                 <div className="header-cell">
@@ -148,15 +141,6 @@ export const Header: React.FC<HeaderProps> = ({
                     </button>
                 </div>
             </div>
-            {isTrackingEnabled && (
-                <GestureLegend 
-                    lastGesture={lastGesture} 
-                    mappings={gestureMappings} 
-                    onLongPress={onLongPressGesture}
-                    onTrigger={onTriggerGesture}
-                    gestureHits={gestureHits}
-                />
-            )}
         </header>
     );
 };

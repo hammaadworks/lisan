@@ -28,7 +28,7 @@ export const SentenceBuilder: React.FC<SentenceBuilderProps> = ({
   flashBorder,
   currentlyPlayingId,
 }) => {
-  const { isPrimary } = useLanguage();
+  const { t } = useLanguage();
 
   return (
     <div className={`sentence-dock-glass glass-container ${flashBorder ? 'flash-red-border' : ''}`}>
@@ -36,7 +36,7 @@ export const SentenceBuilder: React.FC<SentenceBuilderProps> = ({
         <div className="builder-scroll" ref={builderScrollRef}>
           {words.length === 0 && (
              <span className="builder-placeholder">
-               {isPrimary ? 'جملہ بنائیں...' : 'Build a sentence...'}
+               {t('sentence.placeholder')}
              </span>
           )}
           {words.map((w: any, i: number) => (
@@ -62,7 +62,7 @@ export const SentenceBuilder: React.FC<SentenceBuilderProps> = ({
           }}
           disabled={!canAddWords}
         >
-          <span>{isPrimary ? 'بولیں' : 'SPEAK'}</span>
+          <span>{t('sentence.speak')}</span>
         </button>
         <button
           className={`btn-dock-ios clear-btn ${focusedIndex === offset + 1 ? 'focused-item' : ''}`}

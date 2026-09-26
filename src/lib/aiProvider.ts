@@ -7,6 +7,7 @@ export interface AISuggestion {
   transliterations: Record<string, any>;
   icon?: string;
   shape?: string;
+  doodle_shapes?: string[];
 }
 
 const SYSTEM_PROMPT = `You are a linguist and AAC expert. Generate high-quality data for an AAC app.
@@ -47,12 +48,16 @@ Schema: {
   },
 
   async generateTTS(text: string, language: string, config: AppConfig, gender: 'male' | 'female' = 'male'): Promise<Blob | null> {
-    const ai = config.ai_config?.tts;
+    const aiConfig = config.ai_config as any;
+    const ai = aiConfig?.tts || aiConfig;
     if (!ai) throw new Error('AI configuration for TTS is missing.');
-    if (!ai.apiKey) throw new Error('AI API Key for TTS is missing. Please provide it in AI Settings.');
+    
+    const endpoint = ai.endpoint || aiConfig?.endpoint;
+    const apiKey = ai.apiKey || aiConfig?.apiKey;
+    
+    if (!apiKey) throw new Error('AI API Key for TTS is missing. Please provide it in AI Settings.');
 
-    const model = ai.model || 'gemini-2.5-flash-preview-tts'; 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${ai.apiKey}`;
+    const url = endpoint.includes('?') ? `${endpoint}&key=${apiKey}` : `${endpoint}?key=${apiKey}`;
 
     const voiceName = gender === 'female' ? 'Aoede' : 'Charon';
     const prompt = `Say the following word in ${language}: "${text}"`;
@@ -159,34 +164,40 @@ Schema: {
   },
 
   async callAI(prompt: string, config: AppConfig, type: 'data_gen' | 'tts' = 'data_gen'): Promise<any> {
-    const ai = config.ai_config?.[type];
-    if (!ai || !ai.endpoint) throw new Error(`AI configuration for ${type} is missing endpoint.`);
+    const aiConfig = config.ai_config as any;
+    const ai = aiConfig?.[type] || aiConfig;
+    if (!ai || (!ai.endpoint && !aiConfig?.endpoint)) throw new Error(`AI configuration for ${type} is missing endpoint.`);
+    
+    const endpoint = ai.endpoint || aiConfig?.endpoint;
+    const apiKey = ai.apiKey || aiConfig?.apiKey;
+    const authType = ai.authType || aiConfig?.authType;
+    const model = ai.model || aiConfig?.model;
+    const format = ai.format || aiConfig?.format || (endpoint.includes('generativelanguage.googleapis.com') ? 'gemini' : 'openai');
 
     const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (ai.authType === "bearer") {
-      headers["Authorization"] = `Bearer ${ai.apiKey}`;
-    } else if (ai.authType === "x-api-key") {
-      headers["x-api-key"] = ai.apiKey || "";
+    if (authType === "bearer") {
+      headers["Authorization"] = `Bearer ${apiKey}`;
+    } else if (authType === "x-api-key") {
+      headers["x-api-key"] = apiKey || "";
       headers["anthropic-version"] = "2023-06-01";
-    } else if (ai.authType === "google") {
-      headers["X-goog-api-key"] = ai.apiKey || "";
+    } else if (authType === "google") {
+      headers["X-goog-api-key"] = apiKey || "";
     }
 
     let body: any;
     const fullPrompt = `${SYSTEM_PROMPT}\n${prompt}`;
-    const format = ai.format || (ai.endpoint.includes('generativelanguage.googleapis.com') ? 'gemini' : 'openai');
 
     switch (format) {
       case "openai":
         body = {
-          model: ai.model || (type === 'tts' ? "gemini-2.5-flash-preview-tts" : "gemini-flash-lite-latest"),
+          model: model || (type === 'tts' ? "gemini-2.5-flash-preview-tts" : "gemini-flash-lite-latest"),
           messages: [{ role: "system", content: SYSTEM_PROMPT }, { role: "user", content: prompt }],
           response_format: { type: "json_object" }
         };
         break;
       case "anthropic":
         body = {
-          model: ai.model || "claude-3-haiku-20240307",
+          model: model || "claude-3-haiku-20240307",
           max_tokens: 1000,
           system: SYSTEM_PROMPT,
           messages: [{ role: "user", content: prompt }],
@@ -200,7 +211,7 @@ Schema: {
         break;
       case "ollama":
         body = {
-          model: ai.model || "llama3",
+          model: model || "llama3",
           prompt: fullPrompt,
           stream: false,
           format: "json"
@@ -210,7 +221,7 @@ Schema: {
         throw new Error("Unsupported format");
     }
 
-    const res = await fetch(ai.endpoint, {
+    const res = await fetch(endpoint, {
       method: "POST",
       headers,
       body: JSON.stringify(body),

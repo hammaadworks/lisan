@@ -11,7 +11,7 @@ interface TrainDoodleModalProps {
 }
 
 export const TrainDoodleModal: React.FC<TrainDoodleModalProps> = ({ onSave, onCancel, config }) => {
-  const { isPrimary } = useLanguage();
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [editingItem, setEditingItem] = useState<any | null>(null);
   
@@ -41,7 +41,7 @@ export const TrainDoodleModal: React.FC<TrainDoodleModalProps> = ({ onSave, onCa
     <div className="studio-modal-overlay-brand">
       <div className="studio-modal-brand" style={{ maxWidth: '500px', width: '90%', height: 'auto', maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div className="modal-header-brand" style={{ flexShrink: 0 }}>
-          <h3>{isPrimary ? 'ڈوڈل سکھائیں' : 'Train Doodle'}</h3>
+          <h3>{t('doodle.trainModal.title')}</h3>
           <button className="btn-icon-ios" onClick={onCancel}>
             <XCircle size={20} />
           </button>
@@ -51,7 +51,7 @@ export const TrainDoodleModal: React.FC<TrainDoodleModalProps> = ({ onSave, onCa
           {!editingItem ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <p style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', marginBottom: 8 }}>
-                {isPrimary ? 'تلاش کریں کہ یہ ڈوڈل کس لفظ کے لیے ہے، یا نیا شامل کریں:' : 'Search for the word this doodle represents, or add a new one:'}
+                {t('doodle.trainModal.hint')}
               </p>
               
               <div className="smart-input-area" style={{ borderRadius: '12px', background: 'rgba(0,0,0,0.03)' }}>
@@ -60,7 +60,7 @@ export const TrainDoodleModal: React.FC<TrainDoodleModalProps> = ({ onSave, onCa
                   autoFocus
                   className="search-input-dock" 
                   style={{ width: '100%' }}
-                  placeholder={isPrimary ? 'لفظ تلاش کریں...' : 'Search word...'}
+                  placeholder={t('doodle.trainModal.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -85,7 +85,7 @@ export const TrainDoodleModal: React.FC<TrainDoodleModalProps> = ({ onSave, onCa
                   onClick={handleStartNew}
                 >
                   <span style={{ fontSize: '1.1rem', fontWeight: 800 }}>
-                    {isPrimary ? (searchQuery ? `نیا لفظ: ${searchQuery}` : 'نیا لفظ شامل کریں') : (searchQuery ? `Add new word: ${searchQuery}` : 'Add a new word')}
+                    {searchQuery ? t('doodle.trainModal.addNewWordQuery').replace('{query}', searchQuery) : t('doodle.trainModal.addNewWord')}
                   </span>
                 </button>
               </div>

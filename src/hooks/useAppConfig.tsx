@@ -38,9 +38,24 @@ export interface AppConfig {
     endpoint?: string;
     apiKey?: string;
     model?: string;
-    authType?: 'none' | 'bearer' | 'basic';
+    authType?: 'none' | 'bearer' | 'basic' | 'google' | 'x-api-key';
     username?: string;
     password?: string;
+    format?: 'gemini' | 'openai' | 'anthropic' | 'ollama';
+    tts?: {
+      endpoint?: string;
+      apiKey?: string;
+      model?: string;
+      authType?: 'none' | 'bearer' | 'basic' | 'google' | 'x-api-key';
+      format?: 'gemini' | 'openai' | 'anthropic' | 'ollama';
+    };
+    data_gen?: {
+      endpoint?: string;
+      apiKey?: string;
+      model?: string;
+      authType?: 'none' | 'bearer' | 'basic' | 'google' | 'x-api-key';
+      format?: 'gemini' | 'openai' | 'anthropic' | 'ollama';
+    };
   };
   words?: any[];
   doodles?: any[];

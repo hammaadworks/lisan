@@ -11,3 +11,6 @@ export const SUPPORTED_LANGS =
 
 export const getLanguageCodes = () => SUPPORTED_LANGS.map(l => l.code);
 export const getLanguageLabel = (code: string) => SUPPORTED_LANGS.find(l => l.code === code)?.label || code;
+
+export const GEOMETRIC_CORES = ['circle', 'square', 'triangle', 'line', 'curve', 'dot', 'oval', 'box'];
+export const STRUCTURAL_DESCRIPTORS = ['tall', 'wide', 'loop', 'cross', 'hook', 'zigzag', 'sharp', 'smooth'];

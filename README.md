@@ -1,68 +1,58 @@
-# Shukr: Adaptive Multi-Language AAC 🌙
+# 🌙 It's lisan Alhamdulillah: Empowering Silent Voices through Adaptive AAC
 
-**Shukr** (Arabic: "Gratitude") is a modern, offline-first Augmentative and Alternative Communication (AAC) platform. Born out of a desire to help seniors with speech challenges, it is now an **open-source mission** to provide accessible communication for everyone, everywhere. 
-
-While it features an **Urdu-first** and **gesture-driven** design, it is built to be deeply localized for any language, region, or cultural context.
+**Shukr** (Arabic: "Gratitude") is an open-source, offline-first Augmentative and Alternative Communication (AAC) platform designed to break communication barriers for seniors and individuals with speech challenges. Built with a focus on cultural localization and accessibility, Shukr leverages modern technology to restore dignity and independence through intuitive gesture, voice, and visual interfaces.
 
 [![Vercel Deployment](https://img.shields.io/badge/Deploy-Vercel-black?logo=vercel)](https://shukr.vercel.app)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-![Shukr Banner](shukr_shots/hero.png)
+![Shukr Banner](src/assets/hero.png)
 
-## ✨ Features
+### 🌈 Restoring Dignity Through Technology
 
--   🌍 **Multi-Language Support:** Originally Urdu-first, it is designed for global localization. Switch between Urdu (Nastaliq script) and English seamlessly, or add your own!
--   🖐️ **Gesture Recognition:** Control the app without touching the screen. Use face and hand gestures (Mouth Open, Pointing) to navigate and select words.
--   🎨 **Doodle Mode:** Communicate through sketches and hand-drawn symbols, powered by local machine learning.
--   🎙️ **Voice Studio:** Record custom voices for family members to make communication feel personal and familiar.
--   🧠 **Adaptive Prediction:** Learns from user habits to suggest the most likely next word based on historical usage and time of day.
--   👂 **Ambient Listener:** Voice-activated navigation and triggers for hands-free operation.
--   💾 **Offline-First (PWA):** Works entirely offline once installed. Secure, private, and local-only data storage.
--   📁 **Data Portability:** Export and import your entire configuration (Universe Porter) to sync across devices effortlessly.
+Modern communication tools often fail those who need them most—the elderly and the speech-impaired—by imposing complex interfaces and foreign linguistic structures. Shukr exists to dismantle these invisible barriers. 
 
-## 🚀 Getting Started
+We believe that every individual deserves to express their needs, emotions, and thoughts with dignity. By combining cutting-edge AI with a deeply human-centric design, Shukr transforms a device from a complex piece of hardware into a familiar, empowering companion that understands the nuances of human expression—whether through a subtle gesture, a simple sketch, or a familiar voice.
 
-### For Users (Installation)
-The easiest way to use Shukr is to visit the [Live App](https://shukr.vercel.app) and "Add to Home Screen" to install it as a PWA on your Android or iOS device.
+## Targets (June 2026)
+- [ ] complete lisan such that we can go live in July 1st week [type:: 🏆 MAJOR] [timetrack] [eta:: 2026-06-30]
 
-### For Developers (Setup)
-```bash
-git clone https://github.com/hammaadworks/shukr.git
-cd shukr
-pnpm install
-npm run dev
-```
+### ✨ Core Innovation
 
-## 📖 Documentation
+Shukr is an adaptive ecosystem designed to evolve with the user's needs:
 
-Explore our extensive documentation to get the most out of Shukr:
+- **🌍 Cultural Localization:** Deep support for localized vocabularies, starting with Urdu-first Nastaliq script optimization.
+- **🖐️ Gesture Control:** Hands-free navigation using MediaPipe-powered face and hand gestures (e.g., mouth open, pointing).
+- **🎨 Doodle Mode:** Translate sketches into communication using local machine learning models.
+- **🎙️ Voice Studio:** Personalize the app with familiar family voices through custom recordings.
+- **🧠 Adaptive Prediction:** Learns user habits to suggest relevant words based on context and time.
+- **♿ Inclusive Design:** Built on a comprehensive [Accessibility & Interaction Matrix](./docs/accessibility-matrix.md) that supports the intersection of speech loss, deafness, and illiteracy.
+- **💾 Offline-First (PWA):** Secure, local-only data storage with zero cloud dependency.
 
--   **[Architecture Overview](./docs/architecture.md)**: Deep dive into the technical design.
--   **[Design System](./docs/design-system.md)**: UI/UX principles, typography, and color palette.
--   **[Getting Started](./docs/getting-started.md)**: Setup guide for users and developers.
--   **[Language Management](./docs/language-management.md)**: How the Dual-Language system works and adding new languages.
--   **[Customization Guide](./docs/customization.md)**: How to add new categories, regional content, and styling.
--   **[Gesture Control Guide](./docs/features/gestures.md)**: Learn how to control Shukr with face and hands.
--   **[Doodle Mode](./docs/features/doodle.md)**: Sketch-based communication and training.
--   **[Voice Studio](./docs/features/voice-studio.md)**: Managing custom voice recordings.
--   **[Deployment & PWA](./docs/deployment.md)**: How to host and install Shukr.
--   **[Contribution Guidelines](./docs/CONTRIBUTING.md)**: How to help improve Shukr.
+### 🏗️ Built for Resilience and Privacy
 
-## 🤝 Contributing & Global Reach
+The architecture of Shukr is a testament to the "Local-First" philosophy. We have engineered a platform that prioritizes human privacy and operational reliability above all else. 
 
-Shukr is an open project dedicated to ALLAH SWT and His beloved Rasool SAW. Our goal is to ensure that anyone lacking speech, regardless of their language or region, can benefit from this platform. 
+By offloading all computational intelligence—from **MediaPipe gesture recognition** to **Doodle-to-Speech analysis**—directly to the user's device, we eliminate the need for cloud dependency. Using a resilient **IndexedDB-powered data store**, we ensure that a user's 'Data Universe' (their custom vocabularies, recorded voices, and behavioral patterns) remains strictly personal and always available, even in the most remote environments.
 
-We welcome contributions! Whether it's:
-1.  **Localizing** for a new language (Spanish, Arabic, Bengali, etc.).
-2.  **Adapting** categories for different regions/cultures.
-3.  **Improving** accessibility for specific mobility needs.
+### 🚀 Begin the Journey
 
-Please check our [Contributing Guide](./docs/CONTRIBUTING.md) to get started.
+Whether you are a caregiver seeking a voice for a loved one or a developer looking to contribute to a global mission, getting started with Shukr is effortless.
 
-## 📄 License
+- **Experience:** Visit the live platform at [shukr.vercel.app](https://shukr.vercel.app). We recommend "Adding to Home Screen" to install it as a PWA for a seamless, full-screen, and offline-ready experience.
+- **Contribute:** Our mission is open-source and collaborative. Join us in building the future of accessible communication by setting up your local environment:
+  ```bash
+  pnpm install && pnpm dev
+  ```
 
-This project is licensed under the [MIT License](./LICENSE).
+### 🌍 A Global Mission of Gratitude
+
+Shukr is more than a codebase; it is a shared commitment to ensuring no one is left unheard. While our journey began with a focus on the Urdu language, our vision is boundaryless. We invite the global community to join us—help localize the platform, adapt vocabularies for different cultures, or refine our accessibility models. 
+
+Together, we can bridge the silence and restore the power of connection for everyone, everywhere.
+
+> [!TIP]
+> Dive deeper into our [Full Documentation](./docs/architecture.md) to explore the technical heart of the Data Universe and our human-centric Design System.
 
 ---
 
