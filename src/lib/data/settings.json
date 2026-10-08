@@ -1,7 +1,114 @@
 {
-  "version": 1,
-  "timestamp": 1712451857000,
+  "version": 2,
+  "timestamp": 1774737600000,
   "user_nickname": "Bade Ammi",
+  "categories": [
+    {
+      "id": "essential",
+      "translations": {
+        "ur": "ضروری",
+        "en": "Essentials",
+        "ar": "أساسي",
+        "hi": "ज़रूरी",
+        "es": "Esenciales",
+        "fr": "Essentiels",
+        "zh": "基本"
+      },
+      "icon": "zap",
+      "order": 0,
+      "isSystem": true
+    },
+    {
+      "id": "health",
+      "translations": {
+        "ur": "صحت و تکلیف",
+        "en": "Health & Pain",
+        "ar": "صحة وألم",
+        "hi": "स्वास्थ्य और दर्द",
+        "es": "Salud y Dolor",
+        "fr": "Santé et Douleur",
+        "zh": "健康与疼痛"
+      },
+      "icon": "activity",
+      "order": 1,
+      "isSystem": true
+    },
+    {
+      "id": "food_drink",
+      "translations": {
+        "ur": "کھانا پینا",
+        "en": "Food & Drink",
+        "ar": "طعام وشراب",
+        "hi": "खाना और पीना",
+        "es": "Comida y Bebida",
+        "fr": "Nourriture et Boisson",
+        "zh": "饮食"
+      },
+      "icon": "utensils",
+      "order": 2,
+      "isSystem": true
+    },
+    {
+      "id": "daily",
+      "translations": {
+        "ur": "روزمرہ",
+        "en": "Daily Life",
+        "ar": "الحياة اليومية",
+        "hi": "दैनिक जीवन",
+        "es": "Vida Diaria",
+        "fr": "Vie Quotidienne",
+        "zh": "日常生活"
+      },
+      "icon": "home",
+      "order": 3,
+      "isSystem": true
+    },
+    {
+      "id": "feelings",
+      "translations": {
+        "ur": "جذبات",
+        "en": "Feelings",
+        "ar": "مشاعر",
+        "hi": "भावनाएं",
+        "es": "Sentimientos",
+        "fr": "Sentiments",
+        "zh": "感受"
+      },
+      "icon": "heart",
+      "order": 4,
+      "isSystem": true
+    },
+    {
+      "id": "family",
+      "translations": {
+        "ur": "خاندان",
+        "en": "Family",
+        "ar": "عائلة",
+        "hi": "परिवार",
+        "es": "Familia",
+        "fr": "Famille",
+        "zh": "家人"
+      },
+      "icon": "users",
+      "order": 5,
+      "isSystem": true
+    },
+    {
+      "id": "favorite",
+      "translations": {
+        "ur": "پسندیدہ",
+        "en": "Favorites",
+        "ar": "المفضلة",
+        "hi": "पसंदीदा",
+        "es": "Favoritos",
+        "fr": "Favoris",
+        "zh": "收藏"
+      },
+      "icon": "star",
+      "order": 6,
+      "isSystem": true
+    }
+  ],
   "emergency_contacts": [
     {
       "name": "Masood",
@@ -17,14 +124,14 @@
     }
   ],
   "sos_settings": {
-    "message_template": "I need help immediately!",
+    "message_template": "I need help immediately! Please reach out to me.",
     "countdown_seconds": 5,
     "play_alarm_sound": true
   },
   "preferences": {
     "theme": "light",
     "font_size": "large",
-    "speech_rate": 0.9,
+    "speech_rate": 0.85,
     "enable_vibration": true,
     "enable_click_sound": true,
     "auto_clear_minutes": 5
@@ -33,7 +140,14 @@
     "primary": "ur",
     "secondary": "en"
   },
-  "favorites": [],
+  "favorites": [
+    "water",
+    "food",
+    "washroom",
+    "medicine",
+    "pain",
+    "help"
+  ],
   "activeVoiceProfile": "en_voice_hammaad",
   "ai_config": {
     "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent",
@@ -41,5 +155,16 @@
     "model": "gemini-flash-latest",
     "authType": "none"
   },
-  "family": []
+  "family": [
+    "ammi",
+    "abbu",
+    "son",
+    "daughter",
+    "grandson",
+    "granddaughter",
+    "bahu",
+    "brother",
+    "sister",
+    "caregiver"
+  ]
 }

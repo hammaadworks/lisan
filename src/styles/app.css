@@ -1,9 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* --- Shukr Modular CSS --- */
-
 @import './modules/tokens.css';
 @import './modules/animations.css';
 @import './modules/base.css';
@@ -22,6 +17,11 @@
 @import './modules/settings.css';
 @import './modules/word-editor.css';
 @import './modules/quote.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 
 /* Extra Utility Classes */
 .listening-pulse {
