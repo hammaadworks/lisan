@@ -11,7 +11,7 @@ interface SplashScreenProps {
 export const SplashScreen: React.FC<SplashScreenProps> = ({ quote, isLoading }) => (
   <div className="splash-screen">
     <div className="splash-content">
-      <div className="splash-logo">Shukr</div>
+      <div className="splash-logo">Lisan</div>
       <div className="splash-quote">
         <div className="splash-quote-ur">{quote.ur}</div>
         <div className="splash-quote-en">{quote.en}</div>

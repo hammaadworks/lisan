@@ -3,21 +3,22 @@ import { Trash2, AlertCircle, Check, Languages, Wand2, ShieldCheck, Save, ArrowL
 import { useLanguage } from '../hooks/useLanguage';
 import { SUPPORTED_LANGS } from '../lib/languages';
 import { useAppConfig } from '../hooks/useAppConfig';
-import { ShukrButton } from './ShukrButton';
+import { LisanButton } from './LisanButton';
 import { WordCard } from './WordCard';
 import { SelectDialog, ConfirmDialog } from './modals/Dialogs';
 import { useAudio } from '../hooks/useAudio';
 import { aiProvider } from '../lib/aiProvider';
-import { universeDb } from '../lib/universeDb';
+import { vocabularyStore } from '../lib/vocabularyStore';
+import type { WordItem } from '../types';
 
 interface WordEditorProps {
-  item: any | null;
+  item: WordItem | null;
   onClose?: () => void;
-  onSave: (item: any, blob?: Blob | null) => void;
+  onSave: (item: WordItem, blob?: Blob | null) => void;
   onDelete: (id: string, label?: string) => void;
-  onChange?: (item: any) => void;
+  onChange?: (item: WordItem) => void;
   isNew?: boolean;
-  existingWords?: any[];
+  existingWords?: WordItem[];
   onOpenVoiceStudio?: (wordId: string, language: string) => void;
 }
 
@@ -28,7 +29,7 @@ const getLanguageLabel = (code: string) => {
 
 export const WordEditor: React.FC<WordEditorProps> = ({ item: initialItem, onClose, onSave, onDelete, isNew, existingWords, onChange, onOpenVoiceStudio }) => {
   const { config } = useAppConfig();
-  const [item, setItem] = useState(initialItem);
+  const [item, setItem] = useState<WordItem | null>(initialItem);
   const [isTranslating, setIsTranslating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -51,25 +52,15 @@ export const WordEditor: React.FC<WordEditorProps> = ({ item: initialItem, onClo
   useEffect(() => {
     const fetchAudio = async () => {
       if (!config) return;
-      const voiceOptions = (config.voices || []).filter((p: any) => p.language === activeTab);
+      const voiceOptions = (config.voices || [])
+        .filter((p: any) => p.language === activeTab)
+        .map((p: any) => p.id);
       const wordId = item?.id;
       if (!wordId || isNew) {
-         setActiveVoiceBlob(null);
-         return;
+        setActiveVoiceBlob(null);
+        return;
       }
-      
-      let foundBlob = null;
-      for (const v of voiceOptions) {
-        // Resolve slug to numericId
-        const voiceRecord = await universeDb.voices.where({ id: v.id }).first();
-        if (voiceRecord?.numericId !== undefined) {
-            const rec = await universeDb.audio.get([voiceRecord.numericId, wordId]);
-            if (rec?.blob) {
-               foundBlob = rec.blob;
-               break;
-            }
-        }
-      }
+      const foundBlob = await vocabularyStore.getConceptAudio(wordId, voiceOptions);
       setActiveVoiceBlob(foundBlob);
     };
     fetchAudio();
@@ -107,29 +98,28 @@ export const WordEditor: React.FC<WordEditorProps> = ({ item: initialItem, onClo
   };
 
   const handleToggleLangVerified = (lang: string) => {
-      const updated = { ...item };
-      if (!updated.verifiedLangs) updated.verifiedLangs = [];
-      
-      if (updated.verifiedLangs.includes(lang)) {
-          updated.verifiedLangs = updated.verifiedLangs.filter((l: string) => l !== lang);
-      } else {
-          updated.verifiedLangs.push(lang);
-      }
-      
-      updated.verified = SUPPORTED_LANGS.every(l => updated.verifiedLangs.includes(l.code));
-      
+      if (!item) return;
+      const currentVerified = item.verifiedLangs || [];
+      const nextVerified = currentVerified.includes(lang)
+        ? currentVerified.filter(l => l !== lang)
+        : [...currentVerified, lang];
+      const updated: WordItem = {
+        ...item,
+        verifiedLangs: nextVerified,
+        verified: SUPPORTED_LANGS.every(l => nextVerified.includes(l.code))
+      };
       setItem(updated);
       if (onChange) onChange(updated);
   };
 
   const handleToggleFullVerified = () => {
-      const updated = { ...item };
-      updated.verified = !updated.verified;
-      if (updated.verified) {
-          updated.verifiedLangs = SUPPORTED_LANGS.map(l => l.code);
-      } else {
-          updated.verifiedLangs = [];
-      }
+      if (!item) return;
+      const willBeVerified = !item.verified;
+      const updated: WordItem = {
+        ...item,
+        verified: willBeVerified,
+        verifiedLangs: willBeVerified ? SUPPORTED_LANGS.map(l => l.code) : []
+      };
       setItem(updated);
       if (onChange) onChange(updated);
   };
@@ -157,15 +147,19 @@ export const WordEditor: React.FC<WordEditorProps> = ({ item: initialItem, onClo
               if (!updated.transliterations) updated.transliterations = {};
               if (!updated.transliterations[targetLang]) updated.transliterations[targetLang] = {};
               
+              if (!updated.translations) updated.translations = {};
+              if (!updated.transliterations) updated.transliterations = {};
+
               if (res.translation) {
                   updated.translations[targetLang] = res.translation;
                   if (targetLang === 'ur') updated.text_primary = res.translation;
                   if (targetLang === 'en') updated.text_secondary = res.translation;
               }
               if (res.transliterations) {
+                  const translits = updated.transliterations;
+                  if (!translits[targetLang]) translits[targetLang] = {};
                   Object.keys(res.transliterations).forEach(srcLang => {
-                      if (!updated.transliterations[targetLang]) updated.transliterations[targetLang] = {};
-                      updated.transliterations[targetLang][srcLang] = res.transliterations[srcLang];
+                      translits[targetLang][srcLang] = res.transliterations[srcLang];
                   });
               }
               
@@ -243,9 +237,9 @@ export const WordEditor: React.FC<WordEditorProps> = ({ item: initialItem, onClo
             <ArrowLeft size={24} color="var(--color-primary)" />
           </button>
 
-          {/* Center: Shukr */}
-          <div className="shukr-button-wrapper" style={{ transform: 'scale(0.9)' }}>
-            <ShukrButton
+          {/* Center: Lisan */}
+          <div className="lisan-button-wrapper" style={{ transform: 'scale(0.9)' }}>
+            <LisanButton
               onSOS={() => {
                 if (typeof (window as any)._showSOS === 'function') {
                   (window as any)._showSOS();

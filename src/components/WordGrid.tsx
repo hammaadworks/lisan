@@ -1,15 +1,15 @@
 import React from 'react';
 import { WordCard } from './WordCard';
-import { useLanguage } from '../hooks/useLanguage';
+import type { WordItem } from '../types';
 
 interface WordGridProps {
-  gridItems: any[];
+  gridItems: WordItem[];
   focusedIndex: number;
   offset: number;
-  onLongPressItem?: (item: any) => void;
-  onEditItem?: (item: any) => void;
+  onLongPressItem?: (item: WordItem) => void;
+  onEditItem?: (item: WordItem) => void;
   onDeleteItem?: (id: string) => void;
-  onSelect?: (item: any) => void;
+  onSelect?: (item: WordItem) => void;
   favorites?: string[];
   currentlyPlayingId?: string | null;
 }
@@ -20,16 +20,10 @@ export const WordGrid: React.FC<WordGridProps> = React.memo(({
   offset,
   onLongPressItem,
   onEditItem,
-  // @ts-ignore
-  onDeleteItem,
   onSelect,
   favorites = [],
   currentlyPlayingId,
 }) => {
-
-  // @ts-ignore
-  const { isPrimary } = useLanguage();
-
   return (
     <div className="smart-grid-apple">
       {gridItems.map((item, idx) => (
@@ -57,3 +51,4 @@ export const WordGrid: React.FC<WordGridProps> = React.memo(({
     </div>
   );
 });
+WordGrid.displayName = 'WordGrid';

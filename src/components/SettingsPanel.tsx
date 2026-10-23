@@ -569,7 +569,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                                         isDanger: true,
                                         action: async () => {
                                             Object.keys(localStorage).forEach(key => {
-                                                if (key.startsWith('shukr_')) {
+                                                if (key.startsWith('lisan_')) {
                                                     localStorage.removeItem(key);
                                                 }
                                             });

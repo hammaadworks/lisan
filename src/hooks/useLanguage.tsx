@@ -38,7 +38,7 @@ const getDirection = (lang: LanguageCode): 'rtl' | 'ltr' => {
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Load the pair configuration from storage or default to Urdu + English
   const [pair, setPair] = useState<DualLanguagePair>(() => {
-    const stored = localStorage.getItem('shukr_lang_pair');
+    const stored = localStorage.getItem('lisan_lang_pair');
     if (stored) {
       const parsed = JSON.parse(stored);
       // Ensure we have current, primary, and secondary
@@ -61,7 +61,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const setLanguage = (lang: LanguageCode) => {
     const newPair = { ...pair, current: lang };
     setPair(newPair);
-    localStorage.setItem('shukr_lang_pair', JSON.stringify(newPair));
+    localStorage.setItem('lisan_lang_pair', JSON.stringify(newPair));
   };
 
   const setLanguagePair = (primary: LanguageCode, secondary: LanguageCode) => {
@@ -71,7 +71,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       current: primary, // Reset to primary when pair changes
     };
     setPair(newPair);
-    localStorage.setItem('shukr_lang_pair', JSON.stringify(newPair));
+    localStorage.setItem('lisan_lang_pair', JSON.stringify(newPair));
   };
 
   useEffect(() => {

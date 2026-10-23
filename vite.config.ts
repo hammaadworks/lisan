@@ -19,8 +19,8 @@ export default defineConfig({
       },
       includeAssets: ['favicon.svg', 'icons.svg', 'src/lib/data/core/*.json', 'src/lib/data/i18n/*.json'],
       manifest: {
-        name: 'Shukr - Adaptive AAC',
-        short_name: 'Shukr',
+        name: 'Lisan - Adaptive AAC',
+        short_name: 'Lisan',
         description: 'Urdu-first Adaptive AAC for Seniors',
         theme_color: '#0891B2',
         background_color: '#ffffff',

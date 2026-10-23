@@ -1,6 +1,6 @@
 import React from 'react';
 import {Camera, Megaphone, Settings, X} from 'lucide-react';
-import {ShukrButton} from './ShukrButton';
+import {LisanButton} from './LisanButton';
 import {useAudio} from '../hooks/useAudio';
 import {useLanguage} from '../hooks/useLanguage';
 import { type GestureDefinition } from '../recognition/gestures/types';
@@ -33,17 +33,13 @@ export const Header: React.FC<HeaderProps> = ({
                                                   onHome,
                                                   isSentenceBuilderActive,
                                                   toggleSentenceBuilder,
-                                                  // @ts-ignore
-                                                  lastGesture,
-                                                  // @ts-ignore
-                                                  isPrimary,
+                                                  lastGesture: _lastGesture,
+                                                  isPrimary: _isPrimary,
                                                   focusedIndex,
                                                   showCloseDropzone = false,
                                                   cameraButtonRef,
-                                                  // @ts-ignore
-                                                  gestureMappings = {},
-                                                  // @ts-ignore
-                                                  onLongPressGesture = () => {},
+                                                  gestureMappings: _gestureMappings = {},
+                                                  onLongPressGesture: _onLongPressGesture = () => {},
                                                   onLanguageClick,
                                                   customLanguageLabel,
                                                   showLanguageToggle = true
@@ -94,10 +90,10 @@ export const Header: React.FC<HeaderProps> = ({
                     </button>
                 </div>
 
-                {/* 2fr: Shukr (Branding) */}
+                {/* 2fr: Lisan (Branding) */}
                 <div className="header-cell span-2">
-                    <div className="shukr-button-wrapper">
-                        <ShukrButton
+                    <div className="lisan-button-wrapper">
+                        <LisanButton
                             onSOS={onSOS}
                             onHome={onHome}
                             playClick={playClick}

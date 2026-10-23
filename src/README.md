@@ -1,6 +1,6 @@
-# 🎨 Shukr Frontend: The Interface of Empathy
+# 🎨 Lisan Frontend: The Interface of Empathy
 
-The frontend of Shukr is where technology meets human need. It is a highly responsive, touch-optimized, and gesture-aware interface built with **React 19** and **Vite**. 
+The frontend of Lisan is where technology meets human need. It is a highly responsive, touch-optimized, and gesture-aware interface built with **React 19** and **Vite**. 
 
 Our design philosophy is rooted in empathy. We aim to create a frictionless experience that feels natural to those who find traditional technology intimidating, using fluid motion, accessible color palettes, and intuitive layouts to guide the user through their communication journey.
 

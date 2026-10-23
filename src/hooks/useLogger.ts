@@ -11,7 +11,7 @@ interface AppEvent {
   synced: boolean;
 }
 
-const OUTBOX_KEY = 'shukr_outbox';
+const OUTBOX_KEY = 'lisan_outbox';
 
 export const useLogger = () => {
   const logEvent = useCallback(async (type: EventType, data: any) => {

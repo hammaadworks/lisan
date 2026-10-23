@@ -25,17 +25,24 @@ export const useGestureService = (onAction: (gestureKey: string) => void, forceD
   // Hit Tracking for Stabilization
   const [gestureHits, setGestureHits] = useState<Record<string, number>>({});
   const hitsRef = useRef<Record<string, number>>({});
+  const predictRef = useRef<() => void>(() => {});
+
+  const scheduleNextFrame = useCallback(() => {
+    requestRef.current = requestAnimationFrame(() => {
+      predictRef.current();
+    });
+  }, []);
 
   const predict = useCallback(async () => {
     if (!videoRef.current || !isRecognitionActive || !isModelLoaded) {
-      requestRef.current = requestAnimationFrame(predict);
+      scheduleNextFrame();
       return;
     }
 
     try {
       const { face, hand } = GestureModelLoader.getInstance().getModels();
       if (!face || !hand) {
-        requestRef.current = requestAnimationFrame(predict);
+        scheduleNextFrame();
         return;
       }
 
@@ -71,15 +78,12 @@ export const useGestureService = (onAction: (gestureKey: string) => void, forceD
       console.error('[useGestureService] Prediction failed:', err);
     }
 
-    requestRef.current = requestAnimationFrame(predict);
-  }, [isRecognitionActive, isModelLoaded, onAction]);
+    scheduleNextFrame();
+  }, [isRecognitionActive, isModelLoaded, onAction, scheduleNextFrame]);
 
-  // Sync status with initial state
   useEffect(() => {
-    if (isEnabled && status === 'idle') {
-      setStatus('requesting');
-    }
-  }, [isEnabled, status]);
+    predictRef.current = predict;
+  }, [predict]);
 
   const toggleTracking = useCallback(() => {
     if (!isEnabled) {
@@ -155,7 +159,7 @@ export const useGestureService = (onAction: (gestureKey: string) => void, forceD
             try {
               if (videoRef.current) {
                 await videoRef.current.play();
-                requestRef.current = requestAnimationFrame(predict);
+                scheduleNextFrame();
               }
             } catch (err) {
               console.error('[useGestureService] Play failed:', err);

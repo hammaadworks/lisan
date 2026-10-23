@@ -32,23 +32,37 @@ A deep module that abstracts the 'Mono vs Dual' display logic.
 *   **Leverage:** Components request a renderable interface (Major, Support, Phonetic) based on global Primary/Secondary settings.
 *   **Mono Mode:** Automatically hides translations and transliterations when the user pair is identical.
 
-### D. Vocabulary Lifecycle Module (`/src/lib/vocabularyStore.ts`)
-Centralizes data integrity and cascading operations.
-*   **Locality:** Manages the sync between database tables (words, audio, doodles) and configuration lists.
-*   **Interface:** Provides atomic `saveConcept` and `deleteConcept` methods to UI orchestrators.
+### D. Vocabulary & Concept Lifecycle Module (`/src/lib/vocabularyStore.ts`)
+Centralizes data integrity and cascading operations across IndexedDB (single source of truth).
+*   **Locality:** Encapsulates atomic saving and cascading deletion across concepts (`words`), custom recordings (`audio`), and vector drawings (`doodles`).
+*   **Interface:** Exposes high-level `saveConcept`, `deleteConcept`, `getConceptAudio`, and `saveGestureAudio` methods so UI orchestrators never query audio tables directly.
 
-### E. Gesture Service Module (`/src/components/GestureService.tsx`)
+### E. Sensory Feedback Subsystem (`/src/lib/sensoryFeedback.ts`)
+Decouples UI sounds, emergency sirens, and device hardware signals from domain speech playback.
+*   **Locality:** Encapsulates Web Audio API synthesis (button clicks, SOS siren tone) and camera flashlight hardware torch constraints.
+
+### F. Accessibility Navigation Module (`/src/hooks/useAccessibilityNavigation.ts`)
+A dedicated hands-free navigation mesh for motor and speech accessibility.
+*   **Leverage:** Eliminates brittle manual offset math by computing focus zones (Header, Categories, Predictions, Grid, Builder, Footer) centrally.
+*   **Seam:** Dispatches hands-free gestures directly to core application actions and routing.
+
+### G. Sentence Builder Domain Hook (`/src/hooks/useSentenceBuilder.ts`)
+Owns sentence composition, constraints, and predictive learning transitions.
+*   **Locality:** Enforces maximum sentence length, boundary flashing, and Markov transition recording into `predictionsEngine`.
+
+### H. Gesture Service Module (`/src/components/GestureService.tsx`)
 A deep module encapsulating all camera hardware, MediaPipe logic, and permission management.
 *   **Locality:** The `App` orchestrator is completely unaware of video elements, streams, or permission states.
 *   **Lifecycle:** Owns the `explaining -> requesting -> active | denied` permission flow, including recovery UI.
 *   **Seam:** Exposes a simple `toggle` mechanism and an `onAction` callback for gesture hits.
-### F. Voice Studio & Audio Pipeline (`/src/components/VoiceStudio/`)
+
+### I. Voice Studio & Audio Pipeline (`/src/components/VoiceStudio/`)
 The personalization hub for custom voice synthesis.
 *   **Recording vs. Info Lang:** Decouples the language being recorded from the language used to render the UI instructions.
-*   **Composite Key Storage:** Audio is stored in IndexedDB using a strict `<lang>_voice_<name>_<wordId>` key format for high-speed lookups.
+*   **Composite Key Storage:** Audio is stored in IndexedDB using a strict compound key `[voiceNumericId+wordId]` for high-speed lookups.
 *   **System Locking:** Pre-loaded system voices are immutable, ensuring core assets are never accidentally overwritten.
 
-### D. Data Portability (Universe Porter)
+### J. Data Portability (Universe Porter)
 *   **Universe Snapshot:** Encapsulates the entire application state—including binary audio blobs—into a single portable JSON bundle.
 *   **Porter Logic:** Handles the serialization of IndexedDB tables into Base64 for cross-device migration.
 

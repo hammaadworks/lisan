@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { 
   Check, RotateCcw, Search, ChevronLeft, ChevronRight, Plus, Trash2, Play, ChevronDown, Edit2, Settings, Languages, Lock, Mic, Type
 } from 'lucide-react';
-import { ShukrButton } from '../ShukrButton';
+import { LisanButton } from '../LisanButton';
 import { WordEditor } from '../WordEditor';
 import { useVoiceRecording } from '../../hooks/useVoiceRecording';
 import { useAudio } from '../../hooks/useAudio';
@@ -60,15 +60,12 @@ export const VoiceStudio: React.FC<VoiceStudioProps> = ({
     return voiceOptions.length > 0 ? voiceOptions[0].value : '';
   });
 
-  useEffect(() => {
-    if (!voiceOptions.find((o: {value: string}) => o.value === activeVoice)) {
-      if (voiceOptions.length > 0) {
-        setActiveVoice(voiceOptions[0].value);
-      } else {
-        setActiveVoice('');
-      }
+  const currentVoiceId = useMemo(() => {
+    if (voiceOptions.some((o: { value: string }) => o.value === activeVoice)) {
+      return activeVoice;
     }
-  }, [primaryLanguage, voiceOptions, activeVoice]);
+    return voiceOptions.length > 0 ? voiceOptions[0].value : '';
+  }, [activeVoice, voiceOptions]);
 
   const [recordedWordIds, setRecordedWordIds] = useState<Set<string>>(new Set());
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -106,7 +103,7 @@ export const VoiceStudio: React.FC<VoiceStudioProps> = ({
 
   const stopReviewAudio = useCallback(() => {
     if (sourceNodeRef.current) {
-      try { sourceNodeRef.current.stop(); } catch (e) {}
+      try { sourceNodeRef.current.stop(); } catch { /* ignore stop error */ }
       sourceNodeRef.current.disconnect();
       sourceNodeRef.current = null;
     }
@@ -135,8 +132,7 @@ export const VoiceStudio: React.FC<VoiceStudioProps> = ({
       return;
     }
     
-    // Resolve slug to numericId
-    const voice = await universeDb.voices.where({ id: activeVoice }).first();
+    const voice = await universeDb.voices.where({ id: currentVoiceId }).first();
     if (!voice?.numericId) {
       setRecordedWordIds(new Set());
       return;
@@ -144,13 +140,28 @@ export const VoiceStudio: React.FC<VoiceStudioProps> = ({
     
     const records = await universeDb.audio.where('voiceNumericId').equals(voice.numericId).toArray();
     setRecordedWordIds(new Set(records.map(r => r.wordId as string)));
-  }, [activeVoice]);
+  }, [currentVoiceId]);
 
   useEffect(() => { 
-    refreshRecordedStatus();
-    setHasAutoJumped(false); // Reset jump flag when voice/lang changes
-    return () => stopReviewAudio();
-  }, [refreshRecordedStatus, activeVoice, primaryLanguage, stopReviewAudio]);
+    let active = true;
+    const loadStatus = async () => {
+      const voice = await universeDb.voices.where({ id: currentVoiceId }).first();
+      if (!voice?.numericId) {
+        if (active) setRecordedWordIds(new Set());
+        return;
+      }
+      const records = await universeDb.audio.where('voiceNumericId').equals(voice.numericId).toArray();
+      if (active) {
+        setRecordedWordIds(new Set(records.map(r => r.wordId as string)));
+        setHasAutoJumped(false);
+      }
+    };
+    loadStatus();
+    return () => {
+      active = false;
+      stopReviewAudio();
+    };
+  }, [currentVoiceId, stopReviewAudio]);
 
   const allWords = useMemo(() => {
     return (config.words || []).map((item: any) => ({ ...item }));
@@ -163,38 +174,28 @@ export const VoiceStudio: React.FC<VoiceStudioProps> = ({
     if (initialWordId && filteredWords.length > 0 && !hasAutoNavigated) {
       const idx = filteredWords.findIndex(w => w.id === initialWordId);
       if (idx !== -1) {
-        setCurrentIndex(idx);
-        setHasAutoNavigated(true);
-        setHasAutoJumped(true); // Don't double jump if navigated by ID
+        queueMicrotask(() => {
+          setCurrentIndex(idx);
+          setHasAutoNavigated(true);
+          setHasAutoJumped(true);
+        });
       }
     }
   }, [initialWordId, filteredWords, hasAutoNavigated]);
 
   // Auto-jump to first unrecorded word if not manually navigated by initialWordId
   useEffect(() => {
-    // We only jump if we haven't jumped yet, we have words, and we have FETCHED the recorded status
-    // recordedWordIds.size might be 0 if nothing is recorded, but we need to know if it's the 
-    // result of a query or just initial state. 
-    // Since we reset hasAutoJumped when activeVoice/primaryLanguage changes, 
-    // and refreshRecordedStatus is called in the same effect, 
-    // we should wait until we have a definitive answer.
-    
     if (!hasAutoJumped && filteredWords.length > 0) {
-      // Find first word ID that is NOT in recordedWordIds
       const firstUnrecordedIdx = filteredWords.findIndex(w => !recordedWordIds.has(w.id));
-      
-      // If we find an unrecorded word that is NOT the first one, it means we definitely have data
-      // If we are at index 0, and it is unrecorded, we should only 'jump' (set flag) if we are sure 
-      // the recordedWordIds query has finished.
       if (firstUnrecordedIdx > 0) {
-        setCurrentIndex(firstUnrecordedIdx);
-        setHasAutoJumped(true);
-      } else if (firstUnrecordedIdx === 0) {
-        // If we have at least one recorded word in the whole set, then we know query finished
-        if (recordedWordIds.size > 0) {
-           // We are already at 0, and it's unrecorded. Just mark as jumped.
-           setHasAutoJumped(true);
-        }
+        queueMicrotask(() => {
+          setCurrentIndex(firstUnrecordedIdx);
+          setHasAutoJumped(true);
+        });
+      } else if (firstUnrecordedIdx === 0 && recordedWordIds.size > 0) {
+        queueMicrotask(() => {
+          setHasAutoJumped(true);
+        });
       }
     }
   }, [filteredWords, recordedWordIds, hasAutoJumped]);
@@ -262,10 +263,12 @@ export const VoiceStudio: React.FC<VoiceStudioProps> = ({
 
   useEffect(() => {
     if (recordingState === 'reviewing' && audioBuffer && !isPlaying) {
-      playReviewAudio();
+      const timer = setTimeout(() => {
+        playReviewAudio();
+      }, 50);
+      return () => clearTimeout(timer);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recordingState, audioBuffer]);
+  }, [recordingState, audioBuffer, isPlaying]);
 
   const handleNext = useCallback(() => {
     stopReviewAudio();
@@ -483,8 +486,8 @@ export const VoiceStudio: React.FC<VoiceStudioProps> = ({
             </button>
           </div>
           <div className="header-cell span-2">
-            <div className="shukr-button-wrapper">
-              <ShukrButton
+            <div className="lisan-button-wrapper">
+              <LisanButton
                 onSOS={() => (window as any)._showSOS?.()}
                 onHome={handleGoHome}
                 playClick={playClick}

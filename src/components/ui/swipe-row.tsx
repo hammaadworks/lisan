@@ -144,10 +144,7 @@ export function SwipeLeftActions({
       initial={{ opacity: 0 }}
       animate={{
         opacity: dragX > ACTIONS_VIEW_THRESHOLD && actionRefLeft ? 1 : 0,
-        x:
-          dragX > 0 && actionRefLeft
-            ? 0
-            : -(actionRefLeft?.current?.offsetWidth || 0),
+        x: dragX > 0 && actionRefLeft ? 0 : "-100%",
       }}
       transition={{ stiffness: 300 }}
       {...props}
@@ -175,10 +172,7 @@ export function SwipeRightActions({
       initial={{ opacity: 0 }}
       animate={{
         opacity: dragX < -ACTIONS_VIEW_THRESHOLD && actionRefRight ? 1 : 0,
-        x:
-          dragX < 0 && actionRefRight
-            ? 0
-            : actionRefRight?.current?.offsetWidth || 0,
+        x: dragX < 0 && actionRefRight ? 0 : "100%",
       }}
       transition={{ stiffness: 300 }}
       {...props}

@@ -89,11 +89,11 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       const bootData = await dataAssembler.assemble(primaryLanguage, secondaryLanguage);
 
-      const lastHydratedPair = localStorage.getItem('shukr_last_hydrated_pair');
+      const lastHydratedPair = localStorage.getItem('lisan_last_hydrated_pair');
       const currentPair = `${primaryLanguage}_${secondaryLanguage}`;
       
-      const lastVersion = parseInt(localStorage.getItem(`shukr_last_boot_version_${currentPair}`) || '0');
-      const lastTimestamp = parseInt(localStorage.getItem(`shukr_last_boot_ts_${currentPair}`) || '0');
+      const lastVersion = parseInt(localStorage.getItem(`lisan_last_boot_version_${currentPair}`) || '0');
+      const lastTimestamp = parseInt(localStorage.getItem(`lisan_last_boot_ts_${currentPair}`) || '0');
 
       const isNewer = bootData.version > lastVersion || (bootData.version === lastVersion && bootData.timestamp > lastTimestamp);
       const isDifferentPair = lastHydratedPair !== currentPair;
@@ -104,9 +104,9 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if ((isNewer || isDifferentPair || isMissingWords) && bootData) {
         console.log(`[AppConfig] Hydrating database for ${currentPair}...`);
         await universePorter.import(bootData as any, true);
-        localStorage.setItem(`shukr_last_boot_version_${currentPair}`, bootData.version.toString());
-        localStorage.setItem(`shukr_last_boot_ts_${currentPair}`, bootData.timestamp.toString());
-        localStorage.setItem('shukr_last_hydrated_pair', currentPair);
+        localStorage.setItem(`lisan_last_boot_version_${currentPair}`, bootData.version.toString());
+        localStorage.setItem(`lisan_last_boot_ts_${currentPair}`, bootData.timestamp.toString());
+        localStorage.setItem('lisan_last_hydrated_pair', currentPair);
       }
 
       const finalConfig = bootData;

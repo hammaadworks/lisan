@@ -10,8 +10,12 @@ import { predictionsEngine } from './lib/predictionsEngine';
 import { translator } from './lib/translator';
 import { universeDb } from './lib/universeDb';
 import { vocabularyStore } from './lib/vocabularyStore';
+import { sensoryFeedback } from './lib/sensoryFeedback';
+import { useSentenceBuilder } from './hooks/useSentenceBuilder';
+import { useAccessibilityNavigation } from './hooks/useAccessibilityNavigation';
+import type { WordItem, AppRoute } from './types';
 
-// Extracted Components
+// Extracted UI Components
 import { SplashScreen } from './components/SplashScreen';
 import { Header } from './components/Header';
 import { WordPredictions } from './components/WordPredictions';
@@ -34,74 +38,135 @@ const AppContent = () => {
   const { speak, speakSequence, playClick, currentlyPlayingId } = useAudio();
   const { config, updateConfig, isLoading: isConfigLoading } = useAppConfig();
 
-  const [editingWord, setEditingWord] = useState<any | null>(null);
+  // Sentence Builder Domain Hook
+  const {
+    sentence,
+    isActive: isSentenceBuilderActive,
+    toggleActive: toggleSentenceBuilder,
+    isFlashing: flashSentenceBuilder,
+    addWord,
+    clearSentence,
+    backspaceSentence,
+    playSentence,
+    canAddWords
+  } = useSentenceBuilder(speakSequence);
 
+  // Core Modals and Editing States
+  const [editingWord, setEditingWord] = useState<WordItem | null>(null);
+  const [addingWord, setAddingWord] = useState<WordItem | null>(null);
+  const [editingGesture, setEditingGesture] = useState<GestureDefinition | null>(null);
+  const [showSOS, setShowSOS] = useState(false);
+
+  // App Lifecycle & Routing
   const isPWA = useMemo(() => {
-    return window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
+    return window.matchMedia('(display-mode: standalone)').matches || (window.navigator as unknown as { standalone?: boolean }).standalone === true;
   }, []);
 
   const [isAppStarted, setIsAppStarted] = useState(() => {
-    return localStorage.getItem('shukr_app_started') === 'true' || isPWA;
+    return localStorage.getItem('lisan_app_started') === 'true' || isPWA;
   });
+
+  const [route, setRoute] = useState<AppRoute>((window.location.hash as AppRoute) || '#');
+  const [previousRoute, setPreviousRoute] = useState<string>('#');
+  const [showSplash, setShowSplash] = useState(isAppStarted);
+
+  // Settings & Voice Studio Routing Params
+  const [initialSettingsTab, setInitialSettingsTab] = useState<string | null>(null);
+  const [initialEditingItem, setInitialEditingItem] = useState<WordItem | null>(null);
+  const [voiceParams, setVoiceParams] = useState<{ wordId?: string; voiceId?: string; language?: string } | null>(null);
+
+  // Navigation, Search, and Category State
   const [currentCategory, setCurrentCategory] = useState<string | null>(null);
-  const [sentence, setSentence] = useState<any[]>([]);
-  const [lastGesture, setLastGesture] = useState<string>('');
-  const [focusedIndex, setFocusedIndex] = useState<number>(-1);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [showSplash, setShowSplash] = useState(isAppStarted); 
-  const [addingWord, setAddingWord] = useState<any | null>(null);
-  const [route, setRoute] = useState(window.location.hash || '#');
-  const [showSOS, setShowSOS] = useState(false);
-  const [initialEditingItem, setInitialEditingItem] = useState<any>(null);
-  const [initialSettingsTab, setInitialSettingsTab] = useState<any>(null);
-  const [voiceParams, setVoiceParams] = useState<{ wordId?: string, voiceId?: string, language?: string } | null>(null);
-  const [dbWords, setDbWords] = useState<any[]>([]);
-  const [isSentenceBuilderActive, setIsSentenceBuilderActive] = useState(false);
-  const [flashSentenceBuilder, setFlashSentenceBuilder] = useState(false);
+  const [lastGesture, setLastGesture] = useState<string>('');
   const [showYesFlash, setShowYesFlash] = useState(false);
   const [showNoFlash, setShowNoFlash] = useState(false);
-  const [randomQuote, setRandomQuote] = useState<any>(null);
   const [isDraggingPreview, setIsDraggingPreview] = useState(false);
-  const [editingGesture, setEditingGesture] = useState<GestureDefinition | null>(null);
+  const [dbWords, setDbWords] = useState<WordItem[]>([]);
+  const [selectedQuote, setSelectedQuote] = useState<any>(null);
 
-  const actionHandlerRef = useRef<(gestureKey: string) => void>(() => {});
   const builderScrollRef = useRef<HTMLDivElement>(null);
   const mainContentRef = useRef<HTMLDivElement>(null);
   const cameraButtonRef = useRef<HTMLButtonElement>(null);
 
+  // Safe quotes management avoiding cascading renders
+  const randomQuote = useMemo(() => {
+    if (selectedQuote) return selectedQuote;
+    if (config?.quotes && config.quotes.length > 0) {
+      return config.quotes[0];
+    }
+    return null;
+  }, [selectedQuote, config?.quotes]);
+
+  const handleNextQuote = useCallback(() => {
+    if (!config?.quotes?.length) return;
+    const quotes = config.quotes;
+    const currentIndex = quotes.findIndex((q: any) => q.id === randomQuote?.id);
+    const nextIndex = (currentIndex + 1) % quotes.length;
+    setSelectedQuote(quotes[nextIndex]);
+  }, [config, randomQuote]);
+
+  // Synchronize IndexedDB words safely without triggering setState in effect warnings
   useEffect(() => {
-    (window as any)._showSOS = () => setShowSOS(true);
-  }, []);
-
-  const handleCameraToggle = useCallback(async () => {
-    if (typeof (window as any)._toggleGestureService === 'function') {
-      (window as any)._toggleGestureService();
-    }
-  }, []);
-
-  const handleSaveGesture = useCallback(async (updated: GestureDefinition, blob?: Blob | null) => {
-    if (!config) return;
-    const newConfig = { 
-      ...config,
-      gesture_mappings: {
-        ...(config.gesture_mappings || {}),
-        [updated.id]: updated
-      }
+    let isMounted = true;
+    universeDb.words.toArray().then((words) => {
+      if (isMounted) setDbWords(words as WordItem[]);
+    });
+    return () => {
+      isMounted = false;
     };
-    updateConfig(newConfig);
-    if (blob) {
-      const gestureId = `gesture_${updated.id}`;
-      await universeDb.audio.put({ voiceNumericId: 0, wordId: gestureId, blob });
-    }
-    setEditingGesture(null);
-  }, [config, updateConfig]);
+  }, [config]);
 
+  // Routing synchronization
+  useEffect(() => {
+    const handleHashChange = () => {
+      setPreviousRoute(route);
+      setRoute((window.location.hash as AppRoute) || '#');
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [route]);
+
+  const navigate = useCallback((newRoute: AppRoute, tab?: string) => {
+    if (tab) setInitialSettingsTab(tab);
+    setPreviousRoute(route);
+    window.location.hash = newRoute;
+  }, [route]);
+
+  const navigateVoiceStudio = useCallback((params: { wordId?: string; voiceId?: string; language?: string }) => {
+    setVoiceParams(params);
+    setPreviousRoute(route);
+    window.location.hash = '#voices';
+  }, [route]);
+
+  // Splash Screen timeout
+  useEffect(() => {
+    if (showSplash) {
+      const timer = setTimeout(() => setShowSplash(false), 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [showSplash]);
+
+  const handleStartApp = useCallback(() => {
+    localStorage.setItem('lisan_app_started', 'true');
+    setIsAppStarted(true);
+    setShowSplash(true);
+    navigate('#');
+    playClick();
+  }, [playClick, navigate]);
+
+  const handleCameraToggle = useCallback(() => {
+    const fn = (window as unknown as { _toggleGestureService?: () => void })._toggleGestureService;
+    if (typeof fn === 'function') {
+      fn();
+    }
+  }, []);
+
+  // Dropzone magnetism for camera preview
   const handlePreviewDrop = useCallback((rect: DOMRect) => {
     if (!cameraButtonRef.current) return;
     const dropRect = cameraButtonRef.current.getBoundingClientRect();
-    
-    // Increased detection area (Magnetism)
-    const padding = 25; 
+    const padding = 25;
     const target = {
       left: dropRect.left - padding,
       right: dropRect.right + padding,
@@ -113,88 +178,35 @@ const AppContent = () => {
     const centerY = rect.top + rect.height / 2;
 
     const isOverlapping = (
-      centerX >= target.left && 
-      centerX <= target.right && 
-      centerY >= target.top && 
+      centerX >= target.left &&
+      centerX <= target.right &&
+      centerY >= target.top &&
       centerY <= target.bottom
     );
 
     if (isOverlapping) {
-      if (navigator.vibrate) navigator.vibrate([40, 30]); // Haptic feedback
+      sensoryFeedback.vibrate([40, 30]);
       handleCameraToggle();
     }
   }, [handleCameraToggle]);
 
-  const refreshWords = useCallback(async () => {
-    const words = await universeDb.words.toArray();
-    setDbWords(words);
-  }, []);
-
-  useEffect(() => {
-    refreshWords();
-  }, [refreshWords, config]);
-
-  const [previousRoute, setPreviousRoute] = useState<string>('#');
-
-  useEffect(() => {
-    const handleHashChange = () => {
-      setPreviousRoute(route);
-      setRoute(window.location.hash || '#');
-    };
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [route]);
-
-  const navigate = useCallback((newRoute: string, tab?: string) => {
-    if (tab) setInitialSettingsTab(tab);
-    setPreviousRoute(route);
-    window.location.hash = newRoute;
-  }, [route]);
-
-  const navigateVoiceStudio = useCallback((params: { wordId?: string, voiceId?: string, language?: string }) => {
-    setVoiceParams(params);
-    setPreviousRoute(route);
-    window.location.hash = '#voices';
-  }, [route]);
-
-  const toggleSentenceBuilder = useCallback(() => {
-    setIsSentenceBuilderActive((prev) => !prev);
-    setFocusedIndex(-1);
-  }, []);
-
-  const handleNextQuote = useCallback(() => {
-    if (!config?.quotes?.length) return;
-    const quotes = config.quotes;
-    const currentIndex = quotes.findIndex((q: any) => q.id === randomQuote?.id);
-    const nextIndex = (currentIndex + 1) % quotes.length;
-    setRandomQuote(quotes[nextIndex]);
-  }, [config, randomQuote]);
-
-  useEffect(() => {
-    if (config?.quotes && config.quotes.length > 0 && !randomQuote) {
-      setRandomQuote(config.quotes[Math.floor(Math.random() * config.quotes.length)]);
-    }
-  }, [config, randomQuote]);
-
-  useEffect(() => {
-    if (showSplash) {
-      const timer = setTimeout(() => setShowSplash(false), 3500);
-      return () => clearTimeout(timer);
-    }
-  }, [showSplash]);
-
-  const playSentence = useCallback(async () => {
-    if (sentence.length === 0) return;
-    await speakSequence(sentence);
-    setSentence([]);
-    setCurrentCategory(null);
-    setSearchQuery('');
-  }, [sentence, speakSequence]);
-
-  const allItems = useMemo(() => {
+  // Category and Word Data
+  const allItems: WordItem[] = useMemo(() => {
     if (!config?.categories) return [];
     return config.categories.flatMap((c: any) => c.items || []);
   }, [config]);
+
+  const displayCategories = useMemo(() => {
+    if (!config?.categories) return [];
+    return config.categories.map((cat: any) => ({
+      id: cat.id,
+      label_primary: cat.label_primary,
+      label_secondary: cat.label_secondary,
+      icon: cat.icon
+    }));
+  }, [config]);
+
+  const searchResults = useFuzzySearch(allItems, searchQuery);
 
   const toggleFavorite = useCallback(
     (itemId: string) => {
@@ -212,70 +224,39 @@ const AppContent = () => {
     if (!config) return;
     const updatedConfig = await vocabularyStore.deleteConcept(id, config);
     updateConfig(updatedConfig);
-    refreshWords();
     setEditingWord(null);
-  }, [config, updateConfig, refreshWords]);
+  }, [config, updateConfig]);
 
-  const handleSaveEdit = useCallback(async (item: any, blob?: Blob | null) => {
+  const handleSaveEdit = useCallback(async (item: WordItem, blob?: Blob | null) => {
     if (!config) return;
-    const updatedConfig = await vocabularyStore.saveConcept(item, config);
-    
-    if (blob) {
-      const voiceSlug = config.active_voice || 'en_voice_hammaad';
-      const voiceRecord = await universeDb.voices.where({ id: voiceSlug }).first();
-      if (voiceRecord?.numericId !== undefined) {
-          await universeDb.audio.put({
-            voiceNumericId: voiceRecord.numericId,
-            wordId: item.id,
-            blob
-          });
-      }
-    }
-    
+    const updatedConfig = await vocabularyStore.saveConcept(item, config, blob);
     updateConfig(updatedConfig);
-    refreshWords();
     setEditingWord(null);
-  }, [config, updateConfig, refreshWords]);
+  }, [config, updateConfig]);
 
-  const displayCategories = useMemo(() => {
-    if (!config?.categories) return [];
-    return config.categories.map((cat: any) => ({
-      id: cat.id,
-      label_primary: cat.label_primary,
-      label_secondary: cat.label_secondary,
-      icon: cat.icon
-    }));
-  }, [config]);
-
-  const searchResults = useFuzzySearch(allItems, searchQuery);
-
-  const handleScroll = useCallback(() => {
-    // Scroll limits omitted
-  }, []);
-
-  const handleAddCustomWord = async (item: any, blob?: Blob | null) => {
+  const handleAddCustomWord = useCallback(async (item: WordItem, blob?: Blob | null) => {
     if (!config) return;
-    
-    // Ensure it goes to general category if not specified
-    const updatedItem = { ...item, categoryId: item.categoryId || 'general' };
-    const updatedConfig = await vocabularyStore.saveConcept(updatedItem, config);
-    
-    if (blob) {
-      const voiceSlug = config.active_voice || 'en_voice_hammaad';
-      const voiceRecord = await universeDb.voices.where({ id: voiceSlug }).first();
-      if (voiceRecord?.numericId !== undefined) {
-          await universeDb.audio.put({
-            voiceNumericId: voiceRecord.numericId,
-            wordId: updatedItem.id,
-            blob
-          });
-      }
-    }
-
+    const updatedItem: WordItem = { ...item, categoryId: item.categoryId || 'general' };
+    const updatedConfig = await vocabularyStore.saveConcept(updatedItem, config, blob);
     updateConfig(updatedConfig);
-    refreshWords();
     setAddingWord(null);
-  };
+  }, [config, updateConfig]);
+
+  const handleSaveGesture = useCallback(async (updated: GestureDefinition, blob?: Blob | null) => {
+    if (!config) return;
+    const newConfig = {
+      ...config,
+      gesture_mappings: {
+        ...(config.gesture_mappings || {}),
+        [updated.id]: updated
+      }
+    };
+    updateConfig(newConfig);
+    if (blob) {
+      await vocabularyStore.saveGestureAudio(updated.id, blob);
+    }
+    setEditingGesture(null);
+  }, [config, updateConfig]);
 
   const createSearchPrompt = useCallback(async () => {
     const res = await translator.translate(searchQuery);
@@ -291,23 +272,6 @@ const AppContent = () => {
     });
   }, [searchQuery]);
 
-  const getSearchItems = useCallback(() => {
-    const results = [...searchResults];
-    const exactMatch = results.some((r: any) => 
-      (r.text_primary || r.ur || '').toLowerCase() === searchQuery.toLowerCase() || 
-      (r.text_secondary || r.en || '').toLowerCase() === searchQuery.toLowerCase()
-    );
-    if (!exactMatch && searchQuery.length > 1) {
-      const addLabel = t('doodle.addNew');
-      results.push({ id: 'add_new_prompt', ur: addLabel, en: 'Add Word?', icon: 'list-plus', isPrompt: true, onClick: createSearchPrompt });
-    }
-    return results;
-  }, [searchResults, searchQuery, createSearchPrompt, language]);
-
-  const getHomeItems = useCallback(() => {
-    return dbWords.length > 0 ? [...dbWords].sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0)) : allItems;
-  }, [dbWords, allItems]);
-
   const handleOpenAddWord = useCallback((_catId: string, initialValue?: string) => {
     setAddingWord({
       id: 'pending_id',
@@ -321,101 +285,95 @@ const AppContent = () => {
     });
   }, []);
 
-  const getFavoriteItems = useCallback(() => {
+  const getSearchItems = useCallback((): WordItem[] => {
+    const results = [...searchResults];
+    const exactMatch = results.some((r: any) =>
+      (r.text_primary || r.ur || '').toLowerCase() === searchQuery.toLowerCase() ||
+      (r.text_secondary || r.en || '').toLowerCase() === searchQuery.toLowerCase()
+    );
+    if (!exactMatch && searchQuery.length > 1) {
+      const addLabel = t('doodle.addNew');
+      results.push({ id: 'add_new_prompt', ur: addLabel, en: 'Add Word?', icon: 'list-plus', isPrompt: true, onClick: createSearchPrompt });
+    }
+    return results;
+  }, [searchResults, searchQuery, createSearchPrompt, t]);
+
+  const getHomeItems = useCallback((): WordItem[] => {
+    return dbWords.length > 0 ? [...dbWords].sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0)) : allItems;
+  }, [dbWords, allItems]);
+
+  const getFavoriteItems = useCallback((): WordItem[] => {
     const favs = config?.favorites || [];
-    const items = (dbWords.length > 0 ? dbWords : allItems).filter((i: any) => favs.includes(i.id));
-    
+    const items = (dbWords.length > 0 ? dbWords : allItems).filter((i: WordItem) => favs.includes(i.id));
     const addLabel = t('doodle.addNew');
     return [
       { id: 'add_fav_prompt', ur: addLabel, en: 'Add Word?', icon: 'list-plus', isPrompt: true, onClick: () => handleOpenAddWord('favorite') },
       ...items
     ];
-  }, [dbWords, allItems, config, language, handleOpenAddWord]);
+  }, [dbWords, allItems, config?.favorites, t, handleOpenAddWord]);
 
-  const getFamilyItems = useCallback(() => {
+  const getFamilyItems = useCallback((): WordItem[] => {
     const fams = config?.family || [];
-    const items = (dbWords.length > 0 ? dbWords : allItems).filter((i: any) => fams.includes(i.id));
+    const items = (dbWords.length > 0 ? dbWords : allItems).filter((i: WordItem) => fams.includes(i.id));
     const addLabel = t('doodle.addNew');
     return [
       { id: 'add_family_prompt', ur: addLabel, en: 'Add Word?', icon: 'list-plus', isPrompt: true, onClick: () => handleOpenAddWord('family') },
       ...items
     ];
-  }, [dbWords, allItems, config, language, handleOpenAddWord]);
+  }, [dbWords, allItems, config?.family, t, handleOpenAddWord]);
 
-  const gridItems = useMemo(() => {
+  const gridItems: WordItem[] = useMemo(() => {
     if (searchQuery) return getSearchItems();
     if (currentCategory === 'favorite') return getFavoriteItems();
     if (currentCategory === 'family') return getFamilyItems();
-    
+
     const items = getHomeItems();
     if (currentCategory === 'general') {
-        const addLabel = t('doodle.addNew');
-        return [
-          { id: 'add_general_prompt', ur: addLabel, en: 'Add Word?', icon: 'list-plus', isPrompt: true, onClick: () => handleOpenAddWord('general') },
-          ...items
-        ];
+      const addLabel = t('doodle.addNew');
+      return [
+        { id: 'add_general_prompt', ur: addLabel, en: 'Add Word?', icon: 'list-plus', isPrompt: true, onClick: () => handleOpenAddWord('general') },
+        ...items
+      ];
     }
     return items;
-  }, [searchQuery, currentCategory, getSearchItems, getFavoriteItems, getFamilyItems, getHomeItems, language, handleOpenAddWord]);
+  }, [searchQuery, currentCategory, getSearchItems, getFavoriteItems, getFamilyItems, getHomeItems, t, handleOpenAddWord]);
 
-  const [predictions, setPredictions] = useState<any[]>([]);
+  // Dynamic Word Predictions
+  const [predictions, setPredictions] = useState<WordItem[]>([]);
 
   useEffect(() => {
-    const updatePredictions = async () => {
-      if (dbWords.length === 0) return;
-      const ranked = await predictionsEngine.rankPredictions(dbWords, sentence);
-      setPredictions(ranked.slice(0, 6));
-    };
-    updatePredictions();
+    let isMounted = true;
+    if (dbWords.length === 0) return;
+    predictionsEngine.rankPredictions(dbWords, sentence).then(ranked => {
+      if (isMounted) setPredictions(ranked.slice(0, 6));
+    });
+    return () => { isMounted = false; };
   }, [sentence, dbWords]);
 
-  const sentenceRef = useRef<any[]>([]);
-  useEffect(() => {
-    sentenceRef.current = sentence;
-  }, [sentence]);
-
   const handleWordItemClick = useCallback(
-    async (item: any) => {
-      const text = isPrimary ? (item.text_primary || item.ur) : (item.text_secondary || item.en);
+    async (item: WordItem) => {
+      const text = isPrimary ? (item.text_primary || item.ur || '') : (item.text_secondary || item.en || '');
       speak(text, item.id);
-
-      if (sentence.length < 8) {
-        setSentence((prev) => {
-          const newSentence = [...prev, item];
-          if (prev.length > 0) {
-            predictionsEngine.recordTransition(prev[prev.length - 1].id, item.id);
-          }
-          return newSentence;
-        });
-      } else {
-        if (isSentenceBuilderActive) {
-          setFlashSentenceBuilder(true);
-          setTimeout(() => setFlashSentenceBuilder(false), 500);
-        } else {
-          setSentence((prev) => [...prev.slice(1), item]);
-        }
-      }
-      
-      predictionsEngine.recordUsage(item.id);
+      addWord(item);
     },
-    [speak, isPrimary, isSentenceBuilderActive, sentence.length]
+    [speak, isPrimary, addWord]
   );
 
+  // Consolidated Navigable Actions Array
   const navigableActions = useMemo(() => {
     const actions: (() => void)[] = [];
-    
+
     // 1. Header (0-4)
-    actions.push(handleCameraToggle); // Camera
-    actions.push(toggleSentenceBuilder); // Builder
-    actions.push(() => { playClick(); navigate('#'); }); // Shukr/Home
-    actions.push(() => { playClick(); setLanguage(language === primaryLanguage ? secondaryLanguage : primaryLanguage); }); // Lang
-    actions.push(() => { playClick(); navigate('#settings'); }); // Settings
+    actions.push(() => handleCameraToggle());
+    actions.push(toggleSentenceBuilder);
+    actions.push(() => { playClick(); navigate('#'); });
+    actions.push(() => { playClick(); setLanguage(language === primaryLanguage ? secondaryLanguage : primaryLanguage); });
+    actions.push(() => { playClick(); navigate('#settings'); });
 
     // 2. Categories
     displayCategories.forEach(cat => actions.push(() => {
       playClick();
       setCurrentCategory(cat.id === currentCategory ? null : cat.id);
-      setFocusedIndex(-1);
     }));
 
     // 3. Predictions
@@ -426,56 +384,94 @@ const AppContent = () => {
 
     // 5. Sentence Builder (if active)
     if (isSentenceBuilderActive) {
-      actions.push(() => { setSentence([]); playClick(); }); // Clear
-      actions.push(() => { setSentence(p => p.slice(0, -1)); playClick(); }); // Backspace
-      actions.push(playSentence); // Play
+      actions.push(() => { clearSentence(); playClick(); });
+      actions.push(() => { backspaceSentence(); playClick(); });
+      actions.push(playSentence);
     }
 
     // 6. Footer Actions (Yes, No, Doodle)
-    actions.push(() => { 
-      speak(t('app.yes'), 'sys_yes'); 
+    actions.push(() => {
+      speak(t('app.yes'), 'sys_yes');
       setShowYesFlash(true);
       setTimeout(() => setShowYesFlash(false), 1000);
     });
-    actions.push(() => { 
-      speak(t('app.no'), 'sys_no'); 
+    actions.push(() => {
+      speak(t('app.no'), 'sys_no');
       setShowNoFlash(true);
       setTimeout(() => setShowNoFlash(false), 1000);
     });
     actions.push(() => { playClick(); navigate('#doodle'); });
 
     return actions;
-  }, [handleCameraToggle, toggleSentenceBuilder, playClick, navigate, setLanguage, language, primaryLanguage, secondaryLanguage, displayCategories, currentCategory, predictions, gridItems, isSentenceBuilderActive, playSentence, handleWordItemClick, isPrimary, speak]);
+  }, [
+    handleCameraToggle,
+    toggleSentenceBuilder,
+    playClick,
+    navigate,
+    setLanguage,
+    language,
+    primaryLanguage,
+    secondaryLanguage,
+    displayCategories,
+    currentCategory,
+    predictions,
+    gridItems,
+    isSentenceBuilderActive,
+    clearSentence,
+    backspaceSentence,
+    playSentence,
+    handleWordItemClick,
+    speak,
+    t
+  ]);
 
+  // Centralized Accessibility Navigation Hook
+  const {
+    focusedIndex,
+    setFocusedIndex,
+    resetFocus,
+    nextFocus,
+    selectCurrent,
+    offsets
+  } = useAccessibilityNavigation(navigableActions, {
+    headerCount: 5,
+    categoriesCount: displayCategories.length,
+    predictionsCount: predictions.length,
+    gridItemsCount: gridItems.length,
+    builderCount: isSentenceBuilderActive ? 3 : 0,
+    footerCount: 3
+  });
+
+  // Hands-free Gesture Action Dispatcher
   const handleGestureAction = useCallback(async (gestureKey: string) => {
     const mapping = config?.gesture_mappings?.[gestureKey];
     if (!mapping) return;
-    
+
     setLastGesture(gestureKey);
     setTimeout(() => setLastGesture(''), 2000);
 
-    // 1. Handle Audio Mapping
+    // 1. Audio Mapping
     if (mapping.type === 'audio') {
-      const gestureId = `gesture_${gestureKey}`;
-      const record = await universeDb.audio.get([0, gestureId]);
-      if (record?.blob) {
-        const url = URL.createObjectURL(record.blob);
+      const blob = await vocabularyStore.getGestureAudio(gestureKey);
+      if (blob) {
+        const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
+        audio.onended = () => URL.revokeObjectURL(url);
         audio.play();
         return;
       }
     }
 
-    // 2. Handle Words Sequence
+    // 2. Words Sequence
     if (mapping.type === 'words' && Array.isArray(mapping.value)) {
-      const wordsToSpeak = allItems.filter((i: any) => (mapping.value as string[]).includes(i.id));
+      const wordsToSpeak = allItems.filter((i: WordItem) => (mapping.value as string[]).includes(i.id));
       if (wordsToSpeak.length > 0) {
         speakSequence(wordsToSpeak);
         return;
       }
     }
 
-    // 3. Handle Actions
+    // 3. Functional Actions
     if (mapping.type === 'action') {
       const action = mapping.value as string;
       switch (action) {
@@ -485,47 +481,59 @@ const AppContent = () => {
           setTimeout(() => setShowYesFlash(false), 1000);
           break;
         case 'CLEAR':
-          setSentence([]); setCurrentCategory(null); setFocusedIndex(-1); playClick();
+          clearSentence();
+          setCurrentCategory(null);
+          resetFocus();
+          playClick();
           break;
         case 'SELECT':
-          if (focusedIndex >= 0 && focusedIndex < navigableActions.length) navigableActions[focusedIndex]();
+          selectCurrent();
           break;
         case 'NEXT':
-          setFocusedIndex(p => (p + 1) % navigableActions.length);
+          nextFocus();
           break;
         case 'NAV_DOODLE':
-          playClick(); navigate('#doodle');
+          playClick();
+          navigate('#doodle');
           break;
         case 'NAV_SETTINGS':
-          playClick(); navigate('#settings');
+          playClick();
+          navigate('#settings');
           break;
         case 'TOGGLE_LANG':
-          playClick(); setLanguage(language === primaryLanguage ? secondaryLanguage : primaryLanguage);
+          playClick();
+          setLanguage(language === primaryLanguage ? secondaryLanguage : primaryLanguage);
           break;
         case 'TOGGLE_BUILDER':
-          playClick(); toggleSentenceBuilder();
+          playClick();
+          toggleSentenceBuilder();
           break;
       }
     }
-  }, [config, isPrimary, speak, speakSequence, allItems, focusedIndex, navigableActions, playClick, navigate, setLanguage, language, primaryLanguage, secondaryLanguage, toggleSentenceBuilder]);
-
-  useEffect(() => {
-    actionHandlerRef.current = handleGestureAction;
-  }, [handleGestureAction]);
-
-  const handleStartApp = useCallback(() => {
-    localStorage.setItem('shukr_app_started', 'true');
-    setIsAppStarted(true);
-    setShowSplash(true);
-    navigate('#');
-    playClick();
-  }, [playClick, navigate]);
+  }, [
+    config,
+    speak,
+    speakSequence,
+    allItems,
+    selectCurrent,
+    nextFocus,
+    clearSentence,
+    resetFocus,
+    playClick,
+    navigate,
+    setLanguage,
+    language,
+    primaryLanguage,
+    secondaryLanguage,
+    toggleSentenceBuilder,
+    t
+  ]);
 
   if (showSplash || isConfigLoading) {
-    return <SplashScreen quote={randomQuote || { ur: 'شکراً', en: 'Shukr' }} isLoading={isConfigLoading} />;
+    return <SplashScreen quote={randomQuote || { ur: 'لسان', en: 'Lisan' }} isLoading={isConfigLoading} />;
   }
 
-  if ((!isAppStarted || route === '#landing') && (route === '#' || route === '' || route === '#landing')) {
+  if ((!isAppStarted || route === '#landing') && (route === '#' || route === '#landing')) {
     return <LandingPage onStart={handleStartApp} />;
   }
 
@@ -533,13 +541,13 @@ const AppContent = () => {
     <div className="app-viewport" dir={document.documentElement.dir}>
       {isDraggingPreview && <div className="dragging-backdrop" />}
 
-      {route !== '#voices' && (
+      {route !== '#voices' && route !== '#words' && (
         <Header
           onOpenSettings={(tab) => navigate('#settings', tab)}
           toggleTracking={handleCameraToggle}
           hasUnsyncedChanges={false}
           onSOS={() => setShowSOS(true)}
-          onHome={() => { setSentence([]); setCurrentCategory(null); navigate('#'); }}
+          onHome={() => { clearSentence(); setCurrentCategory(null); navigate('#'); }}
           isSentenceBuilderActive={isSentenceBuilderActive}
           toggleSentenceBuilder={toggleSentenceBuilder}
           lastGesture={lastGesture}
@@ -558,7 +566,7 @@ const AppContent = () => {
           <VoiceStudio
             config={config}
             updateConfig={updateConfig}
-            onClose={() => { setVoiceParams(null); navigate(previousRoute !== '#voices' ? previousRoute : '#'); }}
+            onClose={() => { setVoiceParams(null); navigate(previousRoute !== '#voices' ? (previousRoute as AppRoute) : '#'); }}
             initialWordId={voiceParams?.wordId}
             initialVoiceId={voiceParams?.voiceId}
             initialLanguage={voiceParams?.language}
@@ -570,8 +578,10 @@ const AppContent = () => {
           />
         ) : route === '#settings' ? (
           <SettingsPanel
-            config={config} updateConfig={updateConfig}
-            initialTab={initialSettingsTab} initialEditingItem={initialEditingItem}
+            config={config}
+            updateConfig={updateConfig}
+            initialTab={(initialSettingsTab as any) || undefined}
+            initialEditingItem={initialEditingItem}
             onOpenVoiceStudio={(wordId?: string, language?: string) => navigateVoiceStudio({ wordId, language })}
             onShowLanding={() => { setIsAppStarted(false); navigate('#'); }}
             onClose={() => { setInitialEditingItem(null); setInitialSettingsTab(null); navigate('#'); }}
@@ -579,43 +589,33 @@ const AppContent = () => {
             onNextQuote={handleNextQuote}
           />
         ) : route === '#doodle' ? (
-          <>
-            <DoodlePad
-              config={config} focusedIndex={focusedIndex}
-              onOpenAddWord={(initial) => handleOpenAddWord('cat_custom', initial)}
-              sentence={sentence}
-              onRecognize={(item: any) => {
-                speak(isPrimary ? (item.text_primary || item.ur) : (item.text_secondary || item.en), item.id);
-                if (sentence.length < 8) {
-                  setSentence(p => [...p, item]);
-                } else {
-                  if (isSentenceBuilderActive) {
-                    setFlashSentenceBuilder(true);
-                    setTimeout(() => setFlashSentenceBuilder(false), 500);
-                  } else {
-                    setSentence(p => [...p.slice(1), item]);
-                  }
-                }
-                predictionsEngine.recordUsage(item.id);
-              }}
-            />
-          </>
+          <DoodlePad
+            config={config}
+            focusedIndex={focusedIndex}
+            onOpenAddWord={(initial) => handleOpenAddWord('cat_custom', initial)}
+            sentence={sentence}
+            onRecognize={(item: WordItem) => {
+              const text = isPrimary ? (item.text_primary || item.ur || '') : (item.text_secondary || item.en || '');
+              speak(text, item.id);
+              addWord(item);
+            }}
+          />
         ) : (
           <>
             <div className="top-system-area">
               <WordPredictions 
                 predictions={predictions} 
                 focusedIndex={focusedIndex} 
-                offset={displayCategories.length} 
+                offset={offsets.predictions} 
                 onSelect={handleWordItemClick}
               />
             </div>
 
-            <div className="main-content-area" ref={mainContentRef} onScroll={handleScroll}>
+            <div className="main-content-area" ref={mainContentRef}>
               <WordGrid
                 gridItems={gridItems}
                 focusedIndex={focusedIndex}
-                offset={5 + displayCategories.length + predictions.length}
+                offset={offsets.grid}
                 currentlyPlayingId={currentlyPlayingId}
                 onLongPressItem={(item) => toggleFavorite(item.id)}
                 onDeleteItem={handleDeleteWord}
@@ -624,14 +624,17 @@ const AppContent = () => {
                 favorites={config?.favorites || []}
               />
             </div>
+
             {isSentenceBuilderActive && (
               <div className="top-system-area" style={{ paddingTop: 0, paddingBottom: 8 }}>
                 <SentenceBuilder
-                  words={sentence} onClear={() => setSentence([])}
-                  onBackspace={() => setSentence(p => p.slice(0, -1))}
-                  onPlay={playSentence} focusedIndex={focusedIndex} 
-                  offset={5 + displayCategories.length + predictions.length + gridItems.length}
-                  canAddWords={sentence.length < 8}
+                  words={sentence}
+                  onClear={clearSentence}
+                  onBackspace={backspaceSentence}
+                  onPlay={playSentence}
+                  focusedIndex={focusedIndex} 
+                  offset={offsets.builder}
+                  canAddWords={canAddWords}
                   builderScrollRef={builderScrollRef} 
                   flashBorder={flashSentenceBuilder}
                   currentlyPlayingId={currentlyPlayingId}
@@ -642,13 +645,15 @@ const AppContent = () => {
         )}
       </div>
 
-      {route !== '#voices' && (
+      {(route === '#' || route === '#doodle') && (
         <Footer
           currentCategory={currentCategory}
           onCategoryClick={(catId) => {
-            playClick(); if (route !== '#') navigate('#');
+            playClick();
+            if (route !== '#') navigate('#');
             setCurrentCategory(catId === currentCategory ? null : catId);
-            setFocusedIndex(-1); setSearchQuery('');
+            setFocusedIndex(-1);
+            setSearchQuery('');
           }}
           onDoodleClick={() => {
             playClick(); 
@@ -678,7 +683,7 @@ const AppContent = () => {
             if (route === '#doodle') navigate('#');
           }}
           focusedIndex={focusedIndex} 
-          offset={5 + displayCategories.length + predictions.length + gridItems.length + (isSentenceBuilderActive ? 3 : 0)}
+          offset={offsets.footer}
         />
       )}
 
@@ -698,14 +703,14 @@ const AppContent = () => {
         addingWord={addingWord} 
         setAddingWord={setAddingWord} 
         onSave={handleAddCustomWord} 
-        existingWords={(config?.categories || []).flatMap((c: any) => c.items || [])} 
+        existingWords={allItems} 
       />
       <WordEditor 
         item={editingWord} 
         onClose={() => setEditingWord(null)} 
         onSave={handleSaveEdit} 
         onDelete={handleDeleteWord} 
-        existingWords={(config?.categories || []).flatMap((c: any) => c.items || [])}
+        existingWords={allItems}
       />
       {editingGesture && (
         <GestureEditModal

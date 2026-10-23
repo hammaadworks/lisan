@@ -15,7 +15,7 @@ interface FooterProps {
 
 /**
  * Footer - Optimized Dock
- * Matches shukr_shots/bottomdock.png
+ * Matches lisan_shots/bottomdock.png
  * Layout: [Favorite] [Family] [Draw (Center)] [Yes] [No]
  */
 export const Footer: React.FC<FooterProps> = React.memo(({
@@ -34,7 +34,7 @@ export const Footer: React.FC<FooterProps> = React.memo(({
                 {/* 1: Yes */}
                 <WordCard
                     variant={4}
-                    item={{ id: 'sys_yes', text_primary: 'ہاں', text_secondary: 'Yes' }}
+                    item={{ id: 'sys_yes', text_primary: 'ہاں', text_secondary: 'Yes', icon: 'check-circle' }}
                     isFocused={focusedIndex === offset}
                     onClick={onYesClick}
                     className="yes-btn footer-mini-card"
@@ -43,7 +43,7 @@ export const Footer: React.FC<FooterProps> = React.memo(({
                 {/* 2: No */}
                 <WordCard
                     variant={4}
-                    item={{ id: 'sys_no', text_primary: 'نہیں', text_secondary: 'No' }}
+                    item={{ id: 'sys_no', text_primary: 'نہیں', text_secondary: 'No', icon: 'x-circle' }}
                     isFocused={focusedIndex === offset + 1}
                     onClick={onNoClick}
                     className="no-btn footer-mini-card"

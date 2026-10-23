@@ -14,6 +14,7 @@ interface GestureServiceProps {
   cameraButtonRef: React.RefObject<HTMLButtonElement | null>;
   onLongPressGesture?: (gesture: any) => void;
   lastGesture?: string;
+  onRegisterToggle?: (toggleFn: () => void) => void;
 }
 
 /**
@@ -28,7 +29,8 @@ export const GestureService: React.FC<GestureServiceProps> = ({
   onDrop,
   cameraButtonRef: _cameraButtonRef,
   onLongPressGesture,
-  lastGesture = ''
+  lastGesture = '',
+  onRegisterToggle
 }) => {
   const { t } = useLanguage();
   const { config } = useAppConfig();
@@ -42,33 +44,35 @@ export const GestureService: React.FC<GestureServiceProps> = ({
     gestureHits
   } = useGestureService(onAction, forceDisabled);
 
-  // Expose toggle globally for the Header button to use
+  // Expose toggle globally and via callback
   React.useEffect(() => {
     (window as any)._toggleGestureService = toggleTracking;
+    onRegisterToggle?.(toggleTracking);
     return () => {
       delete (window as any)._toggleGestureService;
+      onRegisterToggle?.(() => {});
     };
-  }, [toggleTracking]);
+  }, [toggleTracking, onRegisterToggle]);
 
   // Determine what UI surface to render based on internal status
   if (!isEnabled) return null;
 
   if (status === 'explaining' || status === 'requesting') {
     return (
-      <div className="shukr-dialog-overlay" style={{ zIndex: 9999 }}>
-        <div className="shukr-dialog naani-friendly">
-          <div className="shukr-dialog-icon-header">
+      <div className="lisan-dialog-overlay" style={{ zIndex: 9999 }}>
+        <div className="lisan-dialog naani-friendly">
+          <div className="lisan-dialog-icon-header">
              <Camera size={48} color="var(--color-primary)" />
           </div>
-          <h2 className="shukr-dialog-title">{t('dialogs.enableCamera')}</h2>
-          <div className="shukr-dialog-desc">
+          <h2 className="lisan-dialog-title">{t('dialogs.enableCamera')}</h2>
+          <div className="lisan-dialog-desc">
             <p>{t('dialogs.enableCameraDesc')}</p>
           </div>
-          <div className="shukr-dialog-actions">
-            <button className="shukr-dialog-btn btn-cancel" onClick={cancelExplainer}>
+          <div className="lisan-dialog-actions">
+            <button className="lisan-dialog-btn btn-cancel" onClick={cancelExplainer}>
               {t('dialogs.close')}
             </button>
-            <button className="shukr-dialog-btn btn-confirm" onClick={confirmExplainer} disabled={status === 'requesting'}>
+            <button className="lisan-dialog-btn btn-confirm" onClick={confirmExplainer} disabled={status === 'requesting'}>
               <Check size={20} />
               {status === 'requesting' ? '...' : t('dialogs.allow')}
             </button>
@@ -80,17 +84,17 @@ export const GestureService: React.FC<GestureServiceProps> = ({
 
   if (status === 'denied') {
     return (
-      <div className="shukr-dialog-overlay" style={{ zIndex: 9999 }}>
-        <div className="shukr-dialog naani-friendly">
-          <div className="shukr-dialog-icon-header">
+      <div className="lisan-dialog-overlay" style={{ zIndex: 9999 }}>
+        <div className="lisan-dialog naani-friendly">
+          <div className="lisan-dialog-icon-header">
              <ShieldAlert size={48} color="var(--color-danger)" />
           </div>
-          <h2 className="shukr-dialog-title">{t('dialogs.cameraDenied')}</h2>
-          <div className="shukr-dialog-desc">
+          <h2 className="lisan-dialog-title">{t('dialogs.cameraDenied')}</h2>
+          <div className="lisan-dialog-desc">
             <p>Camera access is blocked by your browser. To use hands-free gestures, please click the lock icon 🔒 in your address bar and allow camera access.</p>
           </div>
-          <div className="shukr-dialog-actions">
-            <button className="shukr-dialog-btn btn-confirm" onClick={cancelExplainer} style={{ width: '100%' }}>
+          <div className="lisan-dialog-actions">
+            <button className="lisan-dialog-btn btn-confirm" onClick={cancelExplainer} style={{ width: '100%' }}>
               I understand
             </button>
           </div>

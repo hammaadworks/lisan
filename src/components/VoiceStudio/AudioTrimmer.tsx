@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { getWaveformData } from '../../lib/audioUtils';
 
 interface AudioTrimmerProps {
@@ -20,7 +20,9 @@ export const AudioTrimmer: React.FC<AudioTrimmerProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [waveData, setWaveData] = useState<number[]>([]);
+  const waveData = useMemo(() => {
+    return audioBuffer ? getWaveformData(audioBuffer, 100) : [];
+  }, [audioBuffer]);
   
   // Use REFS for ALL drag logic to ensure 0ms latency and no stale closures
   const trimRef = useRef({ start: 0, end: 1 });
@@ -30,14 +32,13 @@ export const AudioTrimmer: React.FC<AudioTrimmerProps> = ({
 
   useEffect(() => {
     if (audioBuffer) {
-      const data = getWaveformData(audioBuffer, 100);
-      setWaveData(data);
       trimRef.current = { start: 0, end: 1 };
-      setDisplayTrim({ start: 0, end: 1 });
-      onTrimChange(0, 1);
+      queueMicrotask(() => {
+        setDisplayTrim({ start: 0, end: 1 });
+        onTrimChange(0, 1);
+      });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [audioBuffer]);
+  }, [audioBuffer, onTrimChange]);
 
   const drawWaveform = useCallback(() => {
     const canvas = canvasRef.current;

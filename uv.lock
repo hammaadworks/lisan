@@ -99,7 +99,7 @@ wheels = [
 ]
 
 [[package]]
-name = "shukr"
+name = "lisan"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

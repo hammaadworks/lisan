@@ -99,8 +99,8 @@
     "enableMic": "Enable Microphone?",
     "cameraDeniedDesc": "Camera access is blocked. To use gestures, please enable it in your browser settings.",
     "micDeniedDesc": "Microphone access is blocked. To record audio, please enable it in your browser settings.",
-    "enableCameraDesc": "Shukr uses the camera to recognize your hand gestures. Your video is processed locally and never leaves your device.",
-    "enableMicDesc": "Shukr uses the microphone to record your voice. Your recordings are processed locally and never leave your device.",
+    "enableCameraDesc": "Lisan uses the camera to recognize your hand gestures. Your video is processed locally and never leaves your device.",
+    "enableMicDesc": "Lisan uses the microphone to record your voice. Your recordings are processed locally and never leave your device.",
     "close": "Close",
     "allow": "Allow Access"
   },

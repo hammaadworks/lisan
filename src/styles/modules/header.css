@@ -32,7 +32,7 @@
 }
 
 .apple-header.consistent-header:has(.drop-active) .btn-icon-ios:not(.drop-active),
-.apple-header.consistent-header:has(.drop-active) .shukr-button-wrapper,
+.apple-header.consistent-header:has(.drop-active) .lisan-button-wrapper,
 .apple-header.consistent-header:has(.drop-active) .gesture-legend-container {
   opacity: 0.3;
   filter: blur(2px);

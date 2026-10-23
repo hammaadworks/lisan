@@ -43,26 +43,26 @@ export const PermissionDialog: React.FC<PermissionDialogProps> = ({ onConfirm, o
   };
 
   return (
-    <div className="shukr-dialog-overlay">
-      <div className="shukr-dialog naani-friendly">
-        <div className="shukr-dialog-icon-header">
+    <div className="lisan-dialog-overlay">
+      <div className="lisan-dialog naani-friendly">
+        <div className="lisan-dialog-icon-header">
            {getIcon()}
         </div>
         
-        <h2 className="shukr-dialog-title">
+        <h2 className="lisan-dialog-title">
           {getTitle()}
         </h2>
 
-        <div className="shukr-dialog-desc">
+        <div className="lisan-dialog-desc">
           <p>{getDescription()}</p>
         </div>
 
-        <div className="shukr-dialog-actions">
-          <button className="shukr-dialog-btn btn-cancel" onClick={onCancel}>
+        <div className="lisan-dialog-actions">
+          <button className="lisan-dialog-btn btn-cancel" onClick={onCancel}>
             {t('dialogs.close')}
           </button>
           {status !== 'denied' && (
-            <button className="shukr-dialog-btn btn-confirm" onClick={onConfirm} disabled={status === 'requesting'}>
+            <button className="lisan-dialog-btn btn-confirm" onClick={onConfirm} disabled={status === 'requesting'}>
               <Check size={20} />
               {t('dialogs.allow')}
             </button>
@@ -83,14 +83,14 @@ interface AlertDialogProps {
 export const AlertDialog: React.FC<AlertDialogProps> = ({ isOpen, onClose, title, description }) => {
   if (!isOpen) return null;
   return (
-    <div className="shukr-dialog-overlay" onClick={onClose}>
-      <div className="shukr-dialog naani-friendly" onClick={e => e.stopPropagation()}>
-        <h2 className="shukr-dialog-title" style={{ marginTop: 0 }}>{title}</h2>
-        <div className="shukr-dialog-desc">
+    <div className="lisan-dialog-overlay" onClick={onClose}>
+      <div className="lisan-dialog naani-friendly" onClick={e => e.stopPropagation()}>
+        <h2 className="lisan-dialog-title" style={{ marginTop: 0 }}>{title}</h2>
+        <div className="lisan-dialog-desc">
           <p>{description}</p>
         </div>
-        <div className="shukr-dialog-actions">
-          <button className="shukr-dialog-btn btn-confirm" onClick={onClose} style={{ width: '100%' }}>
+        <div className="lisan-dialog-actions">
+          <button className="lisan-dialog-btn btn-confirm" onClick={onClose} style={{ width: '100%' }}>
             OK
           </button>
         </div>
@@ -112,18 +112,18 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({ isOpen, onClose, t
   const { t } = useLanguage();
   if (!isOpen) return null;
   return (
-    <div className="shukr-dialog-overlay" onClick={onClose}>
-      <div className="shukr-dialog naani-friendly" onClick={e => e.stopPropagation()}>
-        <h2 className="shukr-dialog-title" style={{ marginTop: 0, color: isDanger ? 'var(--color-danger)' : 'inherit' }}>{title}</h2>
-        <div className="shukr-dialog-desc">
+    <div className="lisan-dialog-overlay" onClick={onClose}>
+      <div className="lisan-dialog naani-friendly" onClick={e => e.stopPropagation()}>
+        <h2 className="lisan-dialog-title" style={{ marginTop: 0, color: isDanger ? 'var(--color-danger)' : 'inherit' }}>{title}</h2>
+        <div className="lisan-dialog-desc">
           <p>{description}</p>
         </div>
-        <div className="shukr-dialog-actions">
-          <button className="shukr-dialog-btn btn-cancel" onClick={onClose}>
+        <div className="lisan-dialog-actions">
+          <button className="lisan-dialog-btn btn-cancel" onClick={onClose}>
             {t('common.cancel')}
           </button>
           <button 
-            className="shukr-dialog-btn btn-confirm" 
+            className="lisan-dialog-btn btn-confirm" 
             onClick={() => { onConfirm(); onClose(); }}
             style={isDanger ? { background: 'var(--color-danger)' } : {}}
           >
@@ -154,10 +154,10 @@ export const PromptDialog: React.FC<PromptDialogProps> = ({ isOpen, onClose, tit
 
   if (!isOpen) return null;
   return (
-    <div className="shukr-dialog-overlay" onClick={onClose}>
-      <div className="shukr-dialog naani-friendly" onClick={e => e.stopPropagation()}>
-        <h2 className="shukr-dialog-title" style={{ marginTop: 0 }}>{title}</h2>
-        <div className="shukr-dialog-desc" style={{ marginBottom: 16 }}>
+    <div className="lisan-dialog-overlay" onClick={onClose}>
+      <div className="lisan-dialog naani-friendly" onClick={e => e.stopPropagation()}>
+        <h2 className="lisan-dialog-title" style={{ marginTop: 0 }}>{title}</h2>
+        <div className="lisan-dialog-desc" style={{ marginBottom: 16 }}>
           <input 
             className="massive-input"
             style={{ width: '100%', padding: '12px', borderRadius: '12px', fontSize: '1.1rem' }}
@@ -174,12 +174,12 @@ export const PromptDialog: React.FC<PromptDialogProps> = ({ isOpen, onClose, tit
             onKeyDown={e => { if (e.key === 'Enter') { onSubmit(val); onClose(); } }}
           />
         </div>
-        <div className="shukr-dialog-actions">
-          <button className="shukr-dialog-btn btn-cancel" onClick={onClose}>
+        <div className="lisan-dialog-actions">
+          <button className="lisan-dialog-btn btn-cancel" onClick={onClose}>
             {t('common.cancel')}
           </button>
           <button 
-            className="shukr-dialog-btn btn-confirm" 
+            className="lisan-dialog-btn btn-confirm" 
             onClick={() => { onSubmit(val); onClose(); }}
           >
             {t('common.save')}
@@ -217,11 +217,11 @@ export const VoiceAddDialog: React.FC<VoiceAddDialogProps> = ({ isOpen, onClose,
 
   return (
     <>
-      <div className="shukr-dialog-overlay" onClick={onClose}>
-        <div className="shukr-dialog naani-friendly" onClick={e => e.stopPropagation()}>
-          <h2 className="shukr-dialog-title" style={{ marginTop: 0 }}>{title}</h2>
+      <div className="lisan-dialog-overlay" onClick={onClose}>
+        <div className="lisan-dialog naani-friendly" onClick={e => e.stopPropagation()}>
+          <h2 className="lisan-dialog-title" style={{ marginTop: 0 }}>{title}</h2>
           
-          <div className="shukr-dialog-desc" style={{ marginBottom: 20 }}>
+          <div className="lisan-dialog-desc" style={{ marginBottom: 20 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 20 }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, marginBottom: 8, color: 'var(--color-primary)' }}>{t('settings.tabs.voice').toUpperCase()} {t('settings.sos.namePlaceholder').toUpperCase()}</label>
@@ -269,12 +269,12 @@ export const VoiceAddDialog: React.FC<VoiceAddDialogProps> = ({ isOpen, onClose,
             </div>
           </div>
 
-          <div className="shukr-dialog-actions">
-            <button className="shukr-dialog-btn btn-cancel" onClick={onClose}>
+          <div className="lisan-dialog-actions">
+            <button className="lisan-dialog-btn btn-cancel" onClick={onClose}>
               {t('common.cancel')}
             </button>
             <button 
-              className="shukr-dialog-btn btn-confirm" 
+              className="lisan-dialog-btn btn-confirm" 
               disabled={!name.trim()}
               onClick={() => { onSubmit(name, lang); onClose(); }}
             >
@@ -308,10 +308,10 @@ interface SelectDialogProps {
 export const SelectDialog: React.FC<SelectDialogProps> = ({ isOpen, onClose, title, options, selectedValue, onSelect }) => {
   if (!isOpen) return null;
   return (
-    <div className="shukr-dialog-overlay" onClick={onClose}>
-      <div className="shukr-dialog naani-friendly" onClick={e => e.stopPropagation()}>
+    <div className="lisan-dialog-overlay" onClick={onClose}>
+      <div className="lisan-dialog naani-friendly" onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h2 className="shukr-dialog-title" style={{ margin: 0, textAlign: 'left' }}>{title}</h2>
+          <h2 className="lisan-dialog-title" style={{ margin: 0, textAlign: 'left' }}>{title}</h2>
           <button className="btn-icon" onClick={onClose} style={{ background: '#f2f2f7' }}>
             <X size={20} />
           </button>

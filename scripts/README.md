@@ -1,8 +1,8 @@
-# ⚙️ Shukr Backend: The Data Universe Engine
+# ⚙️ Lisan Backend: The Data Universe Engine
 
-The "backend" of Shukr is a specialized suite of data engineering tools and scripts designed to curate, validate, and evolve the **Data Universe**. Unlike traditional cloud-based backends, these tools are focused on preparing high-quality, localized linguistic data that lives entirely on the user's device.
+The "backend" of Lisan is a specialized suite of data engineering tools and scripts designed to curate, validate, and evolve the **Data Universe**. Unlike traditional cloud-based backends, these tools are focused on preparing high-quality, localized linguistic data that lives entirely on the user's device.
 
-This engine ensures that Shukr's vocabulary is not just a list of words, but a structured, intelligent system capable of prediction and cultural resonance.
+This engine ensures that Lisan's vocabulary is not just a list of words, but a structured, intelligent system capable of prediction and cultural resonance.
 
 ## 🛠️ Tech Stack
 
@@ -17,7 +17,7 @@ This engine ensures that Shukr's vocabulary is not just a list of words, but a s
 The heart of the data pipeline. It processes raw linguistic data, applies frequency analysis, and generates the structured JSON that powers the frontend's search and prediction engines.
 
 ### 2. Universal Ingestor (`ingest.js`)
-A robust script for bringing new linguistic datasets into the Shukr ecosystem. It handles mapping, normalization, and conflict resolution.
+A robust script for bringing new linguistic datasets into the Lisan ecosystem. It handles mapping, normalization, and conflict resolution.
 
 ### 3. Word Manager (`update_wordmanager.py`)
 A Python-driven utility that leverages `wordfreq` to provide intelligent data points for each word, ensuring the most common and relevant terms are prioritized for the user.

@@ -63,7 +63,7 @@ export const universePorter = {
    * Triggers a browser download of the snapshot as a JSON file.
    */
   download(snapshot: UniverseSnapshot) {
-    const fileName = `shukr_boot_data_${new Date().toISOString().split('T')[0]}.json`;
+    const fileName = `lisan_boot_data_${new Date().toISOString().split('T')[0]}.json`;
     const dataStr = JSON.stringify(snapshot, null, 2);
     const blob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);

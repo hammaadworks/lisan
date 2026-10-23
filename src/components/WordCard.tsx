@@ -96,11 +96,13 @@ const getFontSize = ({
   return sizeMap[variant];
 };
 
-const getCardIcon = ({ isPrompt, iconKey }: { isPrompt: boolean; iconKey?: keyof typeof IconMap; }): React.ReactNode => {
+const getCardIcon = ({ isPrompt, iconKey, variant }: { isPrompt: boolean; iconKey?: keyof typeof IconMap; variant?: number; }): React.ReactNode => {
   if (isPrompt) return <Plus size={18} />;
   if (!iconKey) return null;
   const Icon: LucideIcon = IconMap[iconKey] || Volume2;
-  return <Icon size={18} />;
+  const size = variant === 4 ? 22 : 18;
+  const strokeWidth = variant === 4 ? 2.5 : 2;
+  return <Icon size={size} strokeWidth={strokeWidth} />;
 };
 
 const buildClassName = ({ variant, isFocused, isPlaying, isPrompt, isFavorite, className }: any) =>
@@ -121,8 +123,7 @@ export const WordCard: React.FC<WordCardProps> = React.memo(({
   isFavorite = false,
   onClick,
   onEdit,
-  // @ts-ignore
-  onDelete,
+  onDelete: _onDelete,
   onToggleFavorite,
   variant = 1,
   className = '',
@@ -153,6 +154,16 @@ export const WordCard: React.FC<WordCardProps> = React.memo(({
     if (item.roman && unselectedLang === 'en') return item.roman;
     return null;
   }, [item.id, item.roman, selectedLang, unselectedLang]);
+
+  const cleanTransliteration = useMemo(() => {
+    if (!transliteration) return null;
+    const cleanT = transliteration.trim();
+    const cleanF = fallbackText.trim();
+    if (cleanT.toLowerCase() === cleanF.toLowerCase()) return null;
+    if (cleanT.toLowerCase() === `${cleanF.toLowerCase()}z`) return null;
+    if (cleanT.toLowerCase() === `${cleanF.toLowerCase()}s`) return null;
+    return cleanT;
+  }, [transliteration, fallbackText]);
 
   const clearAllTimers = useCallback(() => {
     if (favTimerRef.current) clearTimeout(favTimerRef.current);
@@ -223,7 +234,7 @@ export const WordCard: React.FC<WordCardProps> = React.memo(({
     >
       {variant !== 2 && variant !== 3 && (
         <div className="card-icon-top-left">
-          {getCardIcon({ isPrompt, iconKey: item.icon })}
+          {getCardIcon({ isPrompt, iconKey: item.icon, variant })}
         </div>
       )}
 
@@ -243,8 +254,8 @@ export const WordCard: React.FC<WordCardProps> = React.memo(({
 
       {shouldShowFullMeta && (
         <div className="card-bottom-meta">
-          {transliteration && <span className="card-transliteration">{transliteration}</span>}
-          {transliteration && <span className="card-divider">|</span>}
+          {cleanTransliteration && <span className="card-transliteration">{cleanTransliteration}</span>}
+          {cleanTransliteration && <span className="card-divider">|</span>}
           <span className="card-translation">{fallbackText}</span>
         </div>
       )}

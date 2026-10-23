@@ -77,8 +77,8 @@ export const QuoteCard: React.FC<QuoteCardProps> = ({
         </div>
         
         <div className="quote-content" onClick={onNext}>
-          <div className="quote-text-ur">{activeQuoteText || 'شکراً'}</div>
-          <div className="quote-text-en">{secondaryQuoteText || 'Shukr'}</div>
+          <div className="quote-text-ur">{activeQuoteText || 'لسان'}</div>
+          <div className="quote-text-en">{secondaryQuoteText || 'Lisan'}</div>
           {quote?.source && <div className="quote-source">— {quote.source}</div>}
         </div>
 

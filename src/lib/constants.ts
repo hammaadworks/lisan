@@ -3,7 +3,7 @@
  */
 
 // Database configuration
-export const DB_NAME = 'shukr_universe_v1';
+export const DB_NAME = 'lisan_universe_v1';
 export const DB_VERSION = 2;
 
 // Table Names

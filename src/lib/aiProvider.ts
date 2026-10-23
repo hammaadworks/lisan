@@ -86,7 +86,7 @@ Schema: {
       if (!res.ok) {
         const errText = await res.text();
         let errJson;
-        try { errJson = JSON.parse(errText); } catch(e) {}
+        try { errJson = JSON.parse(errText); } catch { /* ignore parse error */ }
         throw new Error(`AI TTS error (${res.status}): ${errJson?.error?.message || errText}`);
       }
 

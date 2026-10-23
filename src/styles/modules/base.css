@@ -14,6 +14,10 @@ html, body, #root {
   font-family: var(--font-main);
 }
 
+button, input, textarea, select {
+  font-family: inherit;
+}
+
 [lang="ur"], .u-text, .naani-urdu-text {
   font-family: var(--font-ur) !important;
 }
@@ -27,28 +31,34 @@ html, body, #root {
   background: var(--color-bg);
   position: relative;
   overflow: hidden;
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
-@media (min-width: 768px) { /* Tablets and larger */
+@media (min-width: 768px) { /* Tablets */
   .app-viewport {
     max-width: 768px;
+    border-radius: 20px;
+    border: 1px solid rgba(45, 90, 39, 0.08);
+    margin-top: 16px;
+    margin-bottom: 16px;
+    height: calc(100dvh - 32px);
+  }
+}
+
+@media (min-width: 1024px) { /* Desktop PC & Mac */
+  .app-viewport {
+    max-width: 1100px;
     border-radius: 24px;
-    box-shadow: var(--shadow-soft);
+    border: 1px solid rgba(45, 90, 39, 0.08);
     margin-top: 20px;
     margin-bottom: 20px;
     height: calc(100dvh - 40px);
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1440px) { /* Large PC / Mac Displays */
   .app-viewport {
-    max-width: 900px;
-  }
-}
-
-@media (min-width: 1280px) {
-  .app-viewport {
-    max-width: 1024px;
+    max-width: 1240px;
   }
 }
 
@@ -59,8 +69,8 @@ html, body, #root {
   height: 1px !important;
 }
 
-/* --- Generic Dialog Styles (Shukr Unified) --- */
-.shukr-dialog-overlay {
+/* --- Generic Dialog Styles (Lisan Unified) --- */
+.lisan-dialog-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
@@ -73,7 +83,7 @@ html, body, #root {
   animation: fadeIn 0.2s ease-out;
 }
 
-.shukr-dialog {
+.lisan-dialog {
   background: var(--color-surface);
   width: 100%;
   max-width: 400px;
@@ -87,19 +97,19 @@ html, body, #root {
   animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.shukr-dialog-title {
+.lisan-dialog-title {
   font-size: 1.4rem;
   font-weight: 800;
   color: var(--color-primary);
   font-family: var(--font-ur, inherit);
 }
 
-.shukr-dialog-desc {
+.lisan-dialog-desc {
   font-size: 1.1rem;
   color: var(--color-text-muted);
 }
 
-.shukr-dialog-input {
+.lisan-dialog-input {
   width: 100%;
   background: var(--color-bg);
   border: 2px solid rgba(45, 90, 39, 0.08);
@@ -111,17 +121,17 @@ html, body, #root {
   transition: border-color 0.2s;
 }
 
-.shukr-dialog-input:focus {
+.lisan-dialog-input:focus {
   border-color: var(--color-primary);
 }
 
-.shukr-dialog-actions {
+.lisan-dialog-actions {
   display: flex;
   gap: 12px;
   margin-top: 8px;
 }
 
-.shukr-dialog-btn {
+.lisan-dialog-btn {
   flex: 1;
   padding: 16px;
   border-radius: 16px;
@@ -132,7 +142,7 @@ html, body, #root {
   transition: transform 0.1s, opacity 0.2s;
 }
 
-.shukr-dialog-btn:active {
+.lisan-dialog-btn:active {
   transform: scale(0.95);
 }
 
@@ -151,7 +161,7 @@ html, body, #root {
   color: white;
 }
 
-.shukr-dialog-options-list {
+.lisan-dialog-options-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -161,11 +171,11 @@ html, body, #root {
   text-align: left;
 }
 
-html[lang="ur"] .shukr-dialog-options-list {
+html[lang="ur"] .lisan-dialog-options-list {
   text-align: right;
 }
 
-.shukr-option-btn {
+.lisan-option-btn {
   background: rgba(45, 90, 39, 0.05);
   border: 2px solid transparent;
   padding: 16px;
@@ -180,11 +190,11 @@ html[lang="ur"] .shukr-dialog-options-list {
   justify-content: space-between;
 }
 
-.shukr-option-btn:active {
+.lisan-option-btn:active {
   transform: scale(0.98);
 }
 
-.shukr-option-btn.selected {
+.lisan-option-btn.selected {
   background: rgba(45, 90, 39, 0.1);
   border-color: var(--color-primary);
   color: var(--color-primary);

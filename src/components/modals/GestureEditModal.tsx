@@ -7,7 +7,7 @@ import { useVoiceRecording } from '../../hooks/useVoiceRecording';
 import { AudioTrimmer } from '../VoiceStudio/AudioTrimmer';
 import { AudioWaveform } from '../VoiceStudio/AudioWaveform';
 import { decodeAudioData, trimAudioBuffer, audioBufferToWavBlob } from '../../lib/audioUtils';
-import { universeDb } from '../../lib/universeDb';
+import { vocabularyStore } from '../../lib/vocabularyStore';
 import { PermissionDialog } from './Dialogs';
 
 interface GestureEditModalProps {
@@ -85,7 +85,7 @@ export const GestureEditModal: React.FC<GestureEditModalProps> = ({ gesture, con
 
   const stopAudio = useCallback(() => {
     if (sourceNodeRef.current) {
-      try { sourceNodeRef.current.stop(); } catch (e) {}
+      try { sourceNodeRef.current.stop(); } catch { /* ignore stop error */ }
       sourceNodeRef.current.disconnect();
       sourceNodeRef.current = null;
     }
@@ -147,8 +147,8 @@ export const GestureEditModal: React.FC<GestureEditModalProps> = ({ gesture, con
 
   useEffect(() => {
     const checkAudio = async () => {
-      const record = await universeDb.audio.get([0, `gesture_${gesture.id}`]);
-      if (record?.blob) setHasExistingAudio(true);
+      const blob = await vocabularyStore.getGestureAudio(gesture.id);
+      if (blob) setHasExistingAudio(true);
     };
     if (activeTab === 'audio') checkAudio();
   }, [gesture.id, activeTab]);
@@ -196,8 +196,7 @@ export const GestureEditModal: React.FC<GestureEditModalProps> = ({ gesture, con
       const trimmed = trimAudioBuffer(audioBuffer, ctx, trimRange.start * audioBuffer.duration, trimRange.end * audioBuffer.duration);
       finalBlob = audioBufferToWavBlob(trimmed);
       
-      const gestureId = `gesture_${gesture.id}`;
-      await universeDb.audio.put({ voiceNumericId: 0, wordId: gestureId, blob: finalBlob });
+      await vocabularyStore.saveGestureAudio(gesture.id, finalBlob);
     }
 
     onSave({
